@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-systemctl enable mountk3s.service
+systemctl enable mountdisk.service
