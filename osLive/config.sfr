@@ -13,10 +13,13 @@
 # lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user persistence" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution TC-CYNU
 # Version minimaliste
 lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user timezone=Europe/Paris" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution K3S-2024
-
+mkdir -p config/hooks ||true 
+mkdir -p config/hooks/live ||true
 cp ../0018-enable_ask_services.chroot config/hooks/live/
 cp ../0020-enable-ssh.chroot config/hooks/live
 # echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
+mkdir -p config/package-lists ||true
+touch config/package-lists/desktop.list.chroot ||true 
 echo curl >> config/package-lists/desktop.list.chroot
 echo vim >> config/package-lists/desktop.list.chroot
 echo tcpdump >> config/package-lists/desktop.list.chroot
