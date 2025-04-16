@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # === CONFIGURATION ===
-read -p "Quel rôle pour ce nœud ? (master/agent) : " ROLE
+ROLE=$(systemd-ask-password --echo "Quel rôle pour ce nœud ? (master/agent)")
 
 # =======================
 
@@ -18,8 +18,8 @@ if [ "$ROLE" = "master" ]; then
     ./install-k3s.sh
 
 elif [ "$ROLE" = "agent" ]; then
-    read -p "IP du serveur master : " MASTER_IP
-    read -p "Token du nœud : " NODE_TOKEN #on le trouve côté master dans /var/lib/rancher/k3s/server/node-token
+    MASTER_IP=$(systemd-ask-password --echo "IP du serveur master :")
+    NODE_TOKEN=$(systemd-ask-password --echo "Token du nœud :") #on le trouve côté master dans /var/lib/rancher/k3s/server/node-token
     if [ -z "$MASTER_IP" ]; then
         echo "ERREUR: MASTER_IP n'est pas défini."
         exit 1
