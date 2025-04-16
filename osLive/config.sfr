@@ -62,6 +62,7 @@ cp ../startmount.sh config/includes.chroot_after_packages/etc/skel/
 
 # ask service
 mkdir -p config/includes.chroot_after_packages/etc/systemd/system/
+chmod +x ../ask.service
 cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
 
 # mount service
