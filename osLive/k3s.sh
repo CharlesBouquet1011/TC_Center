@@ -10,15 +10,16 @@ echo ""
 curl -sfL https://get.k3s.io -o ./install-k3s.sh
 chmod +x ./install-k3s.sh
 
-echo "INFO: Installation k3s ($ROLE)"
+echo "INFO: Installation k3s en tant que ($ROLE)"
 if [ "$ROLE" = "master" ]; then
-    read -p "IP du serveur master : " MASTER_IP
-    read -p "Token du nœud : " NODE_TOKEN #on le trouve côté master dans /var/lib/rancher/k3s/server/node-token
+    
     INSTALL_K3S_SKIP_ENABLE=true \
     INSTALL_K3S_EXEC="--snapshotter=fuse-overlayfs" \
     ./install-k3s.sh
 
 elif [ "$ROLE" = "agent" ]; then
+    read -p "IP du serveur master : " MASTER_IP
+    read -p "Token du nœud : " NODE_TOKEN #on le trouve côté master dans /var/lib/rancher/k3s/server/node-token
     if [ -z "$MASTER_IP" ]; then
         echo "ERREUR: MASTER_IP n'est pas défini."
         exit 1

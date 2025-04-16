@@ -61,7 +61,7 @@ cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
 # k3s
 echo git >> config/package-lists/desktop.list.chroot
 echo fuse3 >> config/package-lists/desktop.list.chroot
-cp ../k3s.chroot config/hooks/live/
+cp ../k3s.sh config/includes.chroot_after_packages/etc/skel/
 
 # docker
 cp ../docker.chroot config/hooks/live/
