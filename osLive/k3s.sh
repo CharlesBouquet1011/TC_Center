@@ -41,3 +41,5 @@ else
 fi
 
 rm ./install-k3s.sh
+
+./hostname-k3s.sh

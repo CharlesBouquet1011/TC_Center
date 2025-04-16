@@ -78,6 +78,8 @@ chmod +x config/includes.chroot_after_packages/usr/local/bin/startmount.sh
 echo git >> config/package-lists/desktop.list.chroot
 echo fuse3 >> config/package-lists/desktop.list.chroot
 cp ../k3s.sh config/includes.chroot_after_packages/usr/local/bin/
+cp ../hosts concig/includes.chroot_after_packages/etc
+cp hostname-k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 
 # docker
 cp ../docker.chroot config/hooks/live/
