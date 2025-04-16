@@ -66,9 +66,13 @@ chmod +x ../ask.service
 cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
 
 # mount service
+chmod +x mountdisk.service
+cp ../mountdisk.service config/includes.chroot_after_packages/etc/systemd/system/
+
+
 mkdir -p config/includes.chroot_after_packages/usr/local/bin
-cp ../mountdisk.service config/includes.chroot_after_packages/usr/local/bin/
-chmod +x config/includes.chroot_after_packages/usr/local/bin/mountdisk.service
+cp ../startmount.sh config/includes.chroot_after_packages/usr/local/bin/
+chmod +x config/includes.chroot_after_packages/usr/local/bin/startmount.sh
 
 # k3s
 echo git >> config/package-lists/desktop.list.chroot
