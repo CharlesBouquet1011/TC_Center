@@ -12,12 +12,12 @@
 # Persistence 
 # lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user persistence" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution TC-CYNU
 # Version minimaliste
-lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user timezone=Europe/Paris" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution K3S-2024
+lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user timezone=Europe/Paris" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution TC_Center0
 mkdir -p config/hooks ||true 
 mkdir -p config/hooks/live ||true
 cp ../0018-enable_ask_services.chroot config/hooks/live/
 cp ../0020-enable-ssh.chroot config/hooks/live
-# echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
+echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
 mkdir -p config/package-lists ||true
 touch config/package-lists/desktop.list.chroot ||true 
 echo curl >> config/package-lists/desktop.list.chroot
@@ -37,12 +37,17 @@ echo openconnect >> config/package-lists/desktop.list.chroot
 #serveur ssh
 echo openssh-server >> config/package-lists/desktop.list.chroot
 
+#shell
+# echo bash >> config/package-lists/desktop.list.chroot
+# echo login >> config/package-lists/desktop.list.chroot
+# echo systemd-sysv >> config/package-lists/desktop.list.chroot
+
 # Configuration à supprimer pour la production
 echo sudo >> config/package-lists/desktop.list.chroot
 echo gnome-terminal >> config/package-lists/desktop.list.chroot
 
 # podman
-echo podman >> config/package-lists/desktop.list.chroot
+# echo podman >> config/package-lists/desktop.list.chroot
 
 # eduroam / startnet / startvpn 
 mkdir -p config/includes.chroot_after_packages/etc/skel
