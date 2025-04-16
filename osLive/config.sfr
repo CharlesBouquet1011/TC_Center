@@ -1,0 +1,65 @@
+# rm -rf live
+# mkdir live
+# cd live
+# ../config.sfr
+# lb build
+
+# Pour l'installation : apt install live-build zstd
+#dd if=./live-image-amd64.hybrid.iso of=/dev/sdd bs=8MB
+### FLASH sur MACos
+#sudo dcfldd if=./live-image-amd64.hybrid.iso of=/dev/disk4 of=/dev/disk5 of=/dev/disk6
+#
+# Persistence 
+# lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user persistence" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution TC-CYNU
+# Version minimaliste
+lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user timezone=Europe/Paris" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution K3S-2024
+
+cp ../0018-enable_ask_services.chroot config/hooks/live/
+cp ../0020-enable-ssh.chroot config/hooks/live
+# echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
+echo curl >> config/package-lists/desktop.list.chroot
+echo vim >> config/package-lists/desktop.list.chroot
+echo tcpdump >> config/package-lists/desktop.list.chroot
+echo libpci3 >> config/package-lists/desktop.list.chroot
+echo firefox-esr >> config/package-lists/desktop.list.chroot
+echo ssh >> config/package-lists/desktop.list.chroot
+echo zstd >> config/package-lists/desktop.list.chroot
+echo user-setup >> config/package-lists/desktop.list.chroot
+# echo wpasupplicant >> config/package-lists/desktop.list.chroot # Wifi management
+echo kbd >> config/package-lists/desktop.list.chroot
+echo console-data >> config/package-lists/desktop.list.chroot
+echo console-setup >> config/package-lists/desktop.list.chroot
+echo cifs-utils >> config/package-lists/desktop.list.chroot
+echo openconnect >> config/package-lists/desktop.list.chroot
+#serveur ssh
+echo openssh-server >> config/package-lists/desktop.list.chroot
+
+# Configuration à supprimer pour la production
+echo sudo >> config/package-lists/desktop.list.chroot
+echo gnome-terminal >> config/package-lists/desktop.list.chroot
+
+# podman
+echo podman >> config/package-lists/desktop.list.chroot
+
+# eduroam / startnet / startvpn 
+mkdir -p config/includes.chroot_after_packages/etc/skel
+cp ../ca.pem  config/includes.chroot_after_packages/etc/skel/
+cp ../startnet.sh config/includes.chroot_after_packages/etc/skel/
+cp ../startmount.sh config/includes.chroot_after_packages/etc/skel/
+# cp ../startvpn.sh config/includes.chroot_after_packages/etc/skel/
+# cp ../getlogin.sh config/includes.chroot_after_packages/etc/skel/
+
+chmod +x ../startssh.sh
+cp ../startssh.sh config/includes.chroot_after_packages/etc/skel/
+# ask service
+mkdir -p config/includes.chroot_after_packages/etc/systemd/system/
+cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
+
+# k3s
+echo git >> config/package-lists/desktop.list.chroot
+echo fuse3 >> config/package-lists/desktop.list.chroot
+cp ../k3s.chroot config/hooks/live/
+
+# docker
+cp ../docker.chroot config/hooks/live/
+

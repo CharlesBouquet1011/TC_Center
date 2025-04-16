@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+echo "Activation de ssh au démarrage..."
+systemctl enable ssh
