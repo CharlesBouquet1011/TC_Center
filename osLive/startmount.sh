@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-if [! -d "/mnt/k3sVolume"]; then
-  sudo mkdir /mnt/k3sVolume
-  sudo mount /dev/sda /mnt/k3sVolume
+if [ ! -d "/mnt/k3sVolume" ]; then
+  mkdir /mnt/k3sVolume
+  mount /dev/sda /mnt/k3sVolume
   if [ $? -eq 0 ]; then
     echo "Disque monté avec succès"
   else

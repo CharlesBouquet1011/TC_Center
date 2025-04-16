@@ -1,13 +1,12 @@
 [Unit]
 Description=Ask user info at boottime
-After=NetworkManager.service
-Before=lightdm.service
-
+After=cryptsetup.target
+Before=basic.target
 [Service]
 Type=oneshot
 TTYPath=/dev/tty13
 ExecStartPre=/usr/bin/chvt 13
-ExecStart=/home/user/k3s.sh
+ExecStart=/usr/local/bin/k3s.sh
 ExecStartPost=/usr/bin/chvt 1
 TimeoutStartSec=0
 StandardInput=tty
@@ -16,4 +15,3 @@ TTYVTDisallocate=yes
 
 [Install]
 WantedBy=multi-user.target
-RequiredBy=NetworkManager.service

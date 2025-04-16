@@ -1,0 +1,12 @@
+[Unit]
+Description=Monter le disque pour K3s
+After=local-fs.target
+Requires=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/startmount.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

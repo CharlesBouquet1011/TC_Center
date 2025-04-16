@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+chmod +x /usr/local/bin/startmount.sh
+systemctl enable mountk3s.service
