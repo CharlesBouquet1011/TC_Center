@@ -80,7 +80,7 @@ echo fuse3 >> config/package-lists/desktop.list.chroot
 cp ../k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../hosts config/includes.chroot_after_packages/etc
 cp ../hostname-k3s.sh config/includes.chroot_after_packages/usr/local/bin/
-mkdir config/includes.chroot_after_packages/home/user/.ssh/
+mkdir -p config/includes.chroot_after_packages/home/user/.ssh/
 cp ../authorized_keys config/includes.chroot_after_packages/home/user/.ssh/
 cp ../k3s.sh config/includes.chroot_after_packages/etc/skel/
 cp ../hostname-k3s.sh config/includes.chroot_after_packages/etc/skel/
