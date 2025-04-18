@@ -1,1 +1,4 @@
 /osLive/live
+*.txt
+*.pub
+authorized_keys
