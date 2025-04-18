@@ -14,3 +14,5 @@ if [ -f "$CONF_PATH" ]; then
 else
     echo "[update-hosts] Aucun fichier hosts.conf trouvé."
 fi
+
+chown user:user -R /home/user/.ssh
