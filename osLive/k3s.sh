@@ -23,11 +23,6 @@ elif [ "$ROLE" = "agent" ]; then
         exit 1
     fi
 
-    if [ -z "$NODE_TOKEN" ]; then
-        echo "ERREUR: NODE_TOKEN n'est pas défini."
-        exit 1
-    fi
-
     INSTALL_K3S_SKIP_ENABLE=true \
     K3S_URL="https://$MASTER_IP:6443" \
     K3S_TOKEN=TC-Center \
