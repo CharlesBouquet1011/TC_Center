@@ -36,3 +36,6 @@ fi
 rm ./install-k3s.sh
 
 ./hostname-k3s.sh
+
+sudo systemctl start k3s #lancer k3s comme service
+sudo chown user:user /etc/rancher/k3s/k3s.yaml #mettre ce fichier à user pour que le kubectl get nodes fonctionne
