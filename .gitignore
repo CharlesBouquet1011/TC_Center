@@ -2,3 +2,4 @@
 *.txt
 *.pub
 authorized_keys
+/osLive/hosts

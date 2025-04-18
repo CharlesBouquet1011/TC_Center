@@ -1,6 +1,6 @@
 #!/bin/bash
 MOUNT_POINT="/mnt/config"
-CONF_PATH="$MOUNT_POINT/hosts.conf"
+CONF_PATH="$MOUNT_POINT/hosts"
 TARGET="/etc/hosts"
 
 # Monter la partition par label

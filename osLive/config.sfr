@@ -85,6 +85,8 @@ cp ../authorized_keys config/includes.chroot_after_packages/home/user/.ssh/
 cp ../k3s.sh config/includes.chroot_after_packages/etc/skel/
 cp ../hostname-k3s.sh config/includes.chroot_after_packages/etc/skel/
 cp ../configAfterBoot.sh config/includes.chroot_after_packages/etc/skel/
+cp ../configSsh.sh config/includes.chroot_after_packages/etc/skel/
+
 
 # docker
 cp ../docker.chroot config/hooks/live/
