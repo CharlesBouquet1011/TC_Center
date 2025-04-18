@@ -12,14 +12,12 @@ chmod +x ./install-k3s.sh
 
 echo "INFO: Installation k3s en tant que ($ROLE)"
 if [ "$ROLE" = "master" ]; then
-    
     INSTALL_K3S_SKIP_ENABLE=true \
-    INSTALL_K3S_EXEC="--snapshotter=fuse-overlayfs" \
+    INSTALL_K3S_EXEC="--snapshotter=fuse-overlayfs --token TC-Center" \
     ./install-k3s.sh
 
 elif [ "$ROLE" = "agent" ]; then
     MASTER_IP=$(systemd-ask-password --echo "IP du serveur master :")
-    NODE_TOKEN=$(systemd-ask-password --echo "Token du nœud :") #on le trouve côté master dans /var/lib/rancher/k3s/server/node-token
     if [ -z "$MASTER_IP" ]; then
         echo "ERREUR: MASTER_IP n'est pas défini."
         exit 1
@@ -32,7 +30,7 @@ elif [ "$ROLE" = "agent" ]; then
 
     INSTALL_K3S_SKIP_ENABLE=true \
     K3S_URL="https://$MASTER_IP:6443" \
-    K3S_TOKEN="$NODE_TOKEN" \
+    K3S_TOKEN=TC-Center \
     INSTALL_K3S_EXEC="agent --snapshotter=fuse-overlayfs" \
     ./install-k3s.sh
 else
