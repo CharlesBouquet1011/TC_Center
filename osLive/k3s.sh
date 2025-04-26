@@ -7,8 +7,8 @@ ROLE=$(systemd-ask-password --echo "Quel rôle pour ce nœud ? (master/agent)")
 
 echo "INFO: Récupération k3s"
 echo ""
-curl -sfL https://get.k3s.io -o ./install-k3s.sh
-if [ $? -ne 0 ]; then
+
+if  ! curl -sfL https://get.k3s.io -o ./install-k3s.sh ; then
     echo "ERREUR: Échec du téléchargement du script d'installation k3s."
     exit 1
 fi

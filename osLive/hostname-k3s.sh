@@ -1,6 +1,4 @@
 #!/bin/bash
-CONF_PATH="/etc/hosts"
-
 # Vérifie qu'on a bien un hostname
 while true; do
     HOSTNAME=$(systemd-ask-password --echo "Nom du noeud (nodeXX avec XX le numéro du noeud, 01, 02 etc)")
