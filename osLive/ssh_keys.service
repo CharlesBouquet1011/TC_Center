@@ -1,0 +1,12 @@
+#!/bin/bash
+
+[Unit]
+Description=Copier les authorized_keys après boot
+After=network.target local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/configSsh.sh
+
+[Install]
+WantedBy=multi-user.target

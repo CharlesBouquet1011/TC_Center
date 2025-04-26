@@ -7,3 +7,4 @@ ssh-keygen -A
 
 systemctl start ssh
 echo "SSH server started on port 22"
+systemctl enable ssh_keys.service

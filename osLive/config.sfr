@@ -64,6 +64,9 @@ mkdir -p config/includes.chroot_after_packages/etc/systemd/system/
 chmod +x ../ask.service
 cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
 
+#ssh service:
+chmod +x ../ssh_keys.service
+cp ../ssh_keys.service config/includes.chroot_after_packages/etc/systemd/system/
 # mount service
 chmod +x ../mountdisk.service
 cp ../mountdisk.service config/includes.chroot_after_packages/etc/systemd/system/
