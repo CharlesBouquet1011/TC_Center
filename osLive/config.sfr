@@ -79,6 +79,7 @@ echo fuse3 >> config/package-lists/desktop.list.chroot
 cp ../k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../hosts config/includes.chroot_after_packages/etc
 cp ../configSsh.sh config/includes.chroot_after_packages/usr/local/bin/
+cp ../authorized_keys config/includes.chroot_after_packages/usr/local/bin/
 
 cp ../hostname-k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../authorized_keys config/includes.chroot_after_packages/etc/skel/

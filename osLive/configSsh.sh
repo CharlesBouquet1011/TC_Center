@@ -1,5 +1,5 @@
 #!/bin/bash
-CONF_PATH="./authorized_keys"
+CONF_PATH="/usr/local/bin/authorized_keys"
 TARGET="/home/user/.ssh/authorized_keys"
 
 [ -d /home/user/.ssh ] || mkdir -p /home/user/.ssh
