@@ -1,16 +1,15 @@
 [Unit]
 Description=Ask user info at boottime
-After=multi-user.target getty.target
+After=multi-user.target
+Before=lightdm.service
+
 [Service]
 Type=oneshot
-# Utiliser tty1 (standard)
-TTYPath=/dev/tty1
-ExecStart=/usr/local/bin/k3s.sh
+ExecStart=/home/user/getlogin.sh
 TimeoutStartSec=0
 StandardInput=tty
-TTYVHanghup=yes
-TTYVTDisallocate=yes
 RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
+RequiredBy=NetworkManager.service

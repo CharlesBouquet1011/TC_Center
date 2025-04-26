@@ -1,8 +1,15 @@
 #!/bin/sh
 
 # === CONFIGURATION ===
-ROLE=$(systemd-ask-password --echo "Quel rôle pour ce nœud ? (master/agent)")
-
+while true; do
+    ROLE=$(systemd-ask-password --echo "Quel rôle pour ce nœud ? (master/agent)")
+    
+    if [[ "$ROLE" == "master" || "$ROLE" == "agent" ]]; then
+        break
+    else
+        echo "ERREUR: Le rôle doit être 'master' ou 'agent'. Veuillez réessayer."
+    fi
+done
 # =======================
 
 echo "INFO: Récupération k3s"
