@@ -46,3 +46,9 @@ rm ./install-k3s.sh
 
 ./hostname-k3s.sh
 
+#installation helm dernière version
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+echo "Helm est installé avec succès."
+
+./configSsh.sh
