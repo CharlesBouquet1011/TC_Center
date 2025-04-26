@@ -1,17 +1,17 @@
 [Unit]
 Description=Ask user info at boottime
-After=cryptsetup.target
-Before=basic.target
+After=multi-user.target getty.target
+Requires=getty@tty13.service
 [Service]
 Type=oneshot
 TTYPath=/dev/tty13
 ExecStartPre=/usr/bin/chvt 13
 ExecStart=/usr/local/bin/k3s.sh
 ExecStartPost=/usr/bin/chvt 1
-TimeoutStartSec=0
 StandardInput=tty
-TTYVHanghup=yes
+TTYVHangup=yes
 TTYVTDisallocate=yes
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

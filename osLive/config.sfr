@@ -18,7 +18,7 @@ cp ../0018-enable_ask_services.chroot config/hooks/live/
 cp ../0020-enable-ssh.chroot config/hooks/live
 cp ../enable-mount-disk.chroot config/hooks/live
 
-#echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
+echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
 mkdir -p config/package-lists ||true
 touch config/package-lists/desktop.list.chroot ||true 
 echo curl >> config/package-lists/desktop.list.chroot
