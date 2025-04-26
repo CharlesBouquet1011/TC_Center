@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # === CONFIGURATION ===
 while true; do
