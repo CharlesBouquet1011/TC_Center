@@ -1,15 +1,14 @@
 [Unit]
 Description=Ask user info at boottime
 After=multi-user.target getty.target
-Requires=getty@tty13.service
 [Service]
 Type=oneshot
-TTYPath=/dev/tty13
-ExecStartPre=/usr/bin/chvt 13
+# Utiliser tty1 (standard)
+TTYPath=/dev/tty1
 ExecStart=/usr/local/bin/k3s.sh
-ExecStartPost=/usr/bin/chvt 1
+TimeoutStartSec=0
 StandardInput=tty
-TTYVHangup=yes
+TTYVHanghup=yes
 TTYVTDisallocate=yes
 RemainAfterExit=yes
 
