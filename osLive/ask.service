@@ -1,7 +1,6 @@
 [Unit]
 Description=Ask user info at boottime
 After=NetworkManager.service
-Before=lightdm.service
 
 [Service]
 Type=oneshot

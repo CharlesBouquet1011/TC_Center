@@ -11,5 +11,11 @@ ATTENTION la clé de la machine change à chaque Boot, si vous vous êtes connec
 ssh-keygen -R IP
 qui va supprimer la machine problématique (par IP) dans la table des hôtes ssh, vous pourrez donc ensuite refaire ssh user@IP et dire yes
 
-# Kubernetes:
-à suivre
+# Kubernetes / helm:
+!!! Il faut un registry local OBLIGATOIREMENT
+Il faut aussi savoir indenter des fichiers yaml 
+commandes utiles (sur le node master):
+`export KUBECONFIG=/etc/rancher/k3s/k3s.yaml`
+`docker build -t name --target target`
+`helm install name path --namespace namespace `
+`kubectl get pods -A`

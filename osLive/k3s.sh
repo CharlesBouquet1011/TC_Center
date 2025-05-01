@@ -55,5 +55,8 @@ rm ./install-k3s.sh
 
 #installation helm dernière version
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+if [ "$ROLE" = "master" ]; then
+    echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/user/.bashrc
+    fi
 
 echo "Helm est installé avec succès."
