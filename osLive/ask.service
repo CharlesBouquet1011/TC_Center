@@ -1,6 +1,7 @@
 [Unit]
 Description=Ask user info at boottime
-After=NetworkManager.service
+After=network-online.target
+Wants=network-online.target
 Before=lightdm.service
 
 [Service]

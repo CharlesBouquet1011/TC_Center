@@ -11,6 +11,7 @@ while true; do
     fi
 done
 # =======================
+/usr/local/bin/hostname-k3s.sh
 
 echo "INFO: Récupération k3s"
 echo ""
@@ -51,7 +52,6 @@ fi
 
 rm ./install-k3s.sh
 
-/usr/local/bin/hostname-k3s.sh
 
 #installation helm dernière version
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
