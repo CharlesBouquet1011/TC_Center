@@ -1,7 +1,9 @@
 [Unit]
 Description=Ask user info at boottime
-After=cryptsetup.target
-Before=basic.target
+After=network-online.target
+Wants=network-online.target
+Before=lightdm.service
+
 [Service]
 Type=oneshot
 TTYPath=/dev/tty13
@@ -12,6 +14,7 @@ TimeoutStartSec=0
 StandardInput=tty
 TTYVHanghup=yes
 TTYVTDisallocate=yes
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

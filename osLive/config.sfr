@@ -13,8 +13,7 @@
 # lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user persistence" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution TC-CYNU
 # Version minimaliste
 lb config --apt-recommends false --bootappend-live "boot=live locales=fr_FR.UTF-8 keyboard-layouts=fr username=user timezone=Europe/Paris" --mode debian --system live --parent-distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --binary-images iso-hybrid --distribution TC_Center0
-mkdir -p config/hooks ||true 
-mkdir -p config/hooks/live ||true
+
 cp ../0018-enable_ask_services.chroot config/hooks/live/
 cp ../0020-enable-ssh.chroot config/hooks/live
 cp ../enable-mount-disk.chroot config/hooks/live
@@ -65,6 +64,9 @@ mkdir -p config/includes.chroot_after_packages/etc/systemd/system/
 chmod +x ../ask.service
 cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
 
+#ssh service:
+chmod +x ../ssh_keys.service
+cp ../ssh_keys.service config/includes.chroot_after_packages/etc/systemd/system/
 # mount service
 chmod +x ../mountdisk.service
 cp ../mountdisk.service config/includes.chroot_after_packages/etc/systemd/system/
@@ -79,7 +81,19 @@ echo git >> config/package-lists/desktop.list.chroot
 echo fuse3 >> config/package-lists/desktop.list.chroot
 cp ../k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../hosts config/includes.chroot_after_packages/etc
+cp ../configSsh.sh config/includes.chroot_after_packages/usr/local/bin/
+cp ../authorized_keys config/includes.chroot_after_packages/usr/local/bin/
+#repo distant k3s
+mkdir -p config/includes.chroot_after_packages/etc/rancher/k3s/
+cp ../registries.yaml config/includes.chroot_after_packages/etc/rancher/k3s/registries.yaml
+
 cp ../hostname-k3s.sh config/includes.chroot_after_packages/usr/local/bin/
+cp ../authorized_keys config/includes.chroot_after_packages/etc/skel/
+cp ../k3s.sh config/includes.chroot_after_packages/etc/skel/
+cp ../hostname-k3s.sh config/includes.chroot_after_packages/etc/skel/
+cp ../configAfterBoot.sh config/includes.chroot_after_packages/etc/skel/
+cp ../configSsh.sh config/includes.chroot_after_packages/etc/skel/
+
 
 # docker
 cp ../docker.chroot config/hooks/live/

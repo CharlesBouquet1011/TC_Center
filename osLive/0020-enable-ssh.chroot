@@ -7,5 +7,4 @@ ssh-keygen -A
 
 systemctl start ssh
 echo "SSH server started on port 22"
-
-#on récupère les clés dans /etc/ssh et ce sont les fichiers ssh_host_rsa_key et  ssh_host_rsa_key.pub (les cat)
+systemctl enable ssh_keys.service

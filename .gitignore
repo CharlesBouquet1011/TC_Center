@@ -1,4 +1,9 @@
 /osLive/live
+*.txt
 *.png
+*.pub
+authorized_keys
+/osLive/hosts
+registries.yaml
 package-lock.json
 .env
