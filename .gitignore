@@ -3,3 +3,4 @@
 *.pub
 authorized_keys
 /osLive/hosts
+registries.yaml

@@ -43,7 +43,8 @@ elif [ "$ROLE" = "agent" ]; then
     K3S_TOKEN=TC-Center \
     INSTALL_K3S_EXEC="agent --snapshotter=fuse-overlayfs" \
     ./install-k3s.sh
-
+    cp /usr/local/bin/registries.yaml /etc/rancher/k3s/registries.yaml 
+    #configuration du repo k3s
     sudo systemctl start k3s-agent
 else
     echo "ERREUR: ROLE doit être 'master' ou 'agent'."
