@@ -27,7 +27,6 @@ if [ "$ROLE" = "master" ]; then
     INSTALL_K3S_SKIP_ENABLE=true \
     INSTALL_K3S_EXEC="--snapshotter=fuse-overlayfs --token TC-Center" \
     ./install-k3s.sh
-    cp /usr/local/bin/registries.yaml /etc/rancher/k3s/registries.yaml 
     sudo systemctl start k3s #lancer k3s comme service
     sudo chown user:user /etc/rancher/k3s/k3s.yaml #mettre ce fichier à user pour que le kubectl get nodes fonctionne
 

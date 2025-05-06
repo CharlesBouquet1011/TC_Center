@@ -83,7 +83,9 @@ cp ../k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../hosts config/includes.chroot_after_packages/etc
 cp ../configSsh.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../authorized_keys config/includes.chroot_after_packages/usr/local/bin/
-cp ../registries.yaml config/includes.chroot_after_packages/usr/local/bin/
+#repo distant k3s
+mkdir -p config/includes.chroot_after_packages/etc/rancher/k3s/
+cp ../registries.yaml config/includes.chroot_after_packages/etc/rancher/k3s/registries.yaml
 
 cp ../hostname-k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../authorized_keys config/includes.chroot_after_packages/etc/skel/
