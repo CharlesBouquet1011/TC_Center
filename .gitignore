@@ -5,5 +5,5 @@
 authorized_keys
 /osLive/hosts
 registries.yaml
-package-lock.json
+.package-lock.json
 .env
