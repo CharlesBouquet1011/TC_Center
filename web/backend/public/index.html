@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire d'Applications Kubernetes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            position: relative;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        button.delete {
+            background-color: #f44336;
+        }
+        button.delete:hover:not(:disabled) {
+            background-color: #da190b;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .loading.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestionnaire d'Applications Kubernetes</h1>
+
+    <div class="container">
+        <h2>Déployer une Application</h2>
+        <div class="form-group">
+            <label for="helmChartUrl">URL du Chart Helm:</label>
+            <input type="text" id="helmChartUrl" value="bitnami/nginx">
+        </div>
+        <div class="form-group">
+            <label for="releaseName">Nom de la Release:</label>
+            <input type="text" id="releaseName" value="test-nginx">
+        </div>
+        <div class="form-group">
+            <label for="namespace">Namespace:</label>
+            <input type="text" id="namespace" value="client-d">
+        </div>
+        <button id="deployButton" onclick="deployApp()">
+            Déployer
+            <div class="loading" id="deployLoading"></div>
+        </button>
+    </div>
+
+    <div class="container">
+        <h2>Vérifier les Ports</h2>
+        <div class="form-group">
+            <label for="checkReleaseName">Nom de la Release:</label>
+            <input type="text" id="checkReleaseName" value="test-nginx">
+        </div>
+        <div class="form-group">
+            <label for="checkNamespace">Namespace:</label>
+            <input type="text" id="checkNamespace" value="client-d">
+        </div>
+        <button id="checkButton" onclick="checkPorts()">
+            Vérifier les Ports
+            <div class="loading" id="checkLoading"></div>
+        </button>
+    </div>
+
+    <div class="container">
+        <h2>Supprimer une Application</h2>
+        <div class="form-group">
+            <label for="deleteReleaseName">Nom de la Release:</label>
+            <input type="text" id="deleteReleaseName" value="test-nginx">
+        </div>
+        <div class="form-group">
+            <label for="deleteNamespace">Namespace:</label>
+            <input type="text" id="deleteNamespace" value="client-d">
+        </div>
+        <button id="deleteButton" class="delete" onclick="deleteApp()">
+            Supprimer
+            <div class="loading" id="deleteLoading"></div>
+        </button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        let isProcessing = false;
+
+        function setLoading(buttonId, loadingId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const loading = document.getElementById(loadingId);
+            button.disabled = isLoading;
+            if (isLoading) {
+                loading.classList.add('active');
+            } else {
+                loading.classList.remove('active');
+            }
+        }
+
+        async function deployApp() {
+            if (isProcessing) return;
+            isProcessing = true;
+            setLoading('deployButton', 'deployLoading', true);
+
+            const data = {
+                helmChartUrl: document.getElementById('helmChartUrl').value,
+                releaseName: document.getElementById('releaseName').value,
+                namespace: document.getElementById('namespace').value
+            };
+
+            try {
+                const response = await fetch('/deploy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                displayResult(result, response.ok);
+            } catch (error) {
+                displayResult({ error: error.message }, false);
+            } finally {
+                isProcessing = false;
+                setLoading('deployButton', 'deployLoading', false);
+            }
+        }
+
+        async function checkPorts() {
+            if (isProcessing) return;
+            isProcessing = true;
+            setLoading('checkButton', 'checkLoading', true);
+
+            const releaseName = document.getElementById('checkReleaseName').value;
+            const namespace = document.getElementById('checkNamespace').value;
+
+            try {
+                const response = await fetch(`/ports?releaseName=${releaseName}&namespace=${namespace}`);
+                const result = await response.json();
+                displayResult(result, response.ok);
+            } catch (error) {
+                displayResult({ error: error.message }, false);
+            } finally {
+                isProcessing = false;
+                setLoading('checkButton', 'checkLoading', false);
+            }
+        }
+
+        async function deleteApp() {
+            if (isProcessing) return;
+            isProcessing = true;
+            setLoading('deleteButton', 'deleteLoading', true);
+
+            const data = {
+                releaseName: document.getElementById('deleteReleaseName').value,
+                namespace: document.getElementById('deleteNamespace').value
+            };
+
+            try {
+                const response = await fetch('/undeploy', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                displayResult(result, response.ok);
+            } catch (error) {
+                displayResult({ error: error.message }, false);
+            } finally {
+                isProcessing = false;
+                setLoading('deleteButton', 'deleteLoading', false);
+            }
+        }
+
+        function displayResult(result, success) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = JSON.stringify(result, null, 2);
+            resultDiv.className = success ? 'success' : 'error';
+        }
+    </script>
+</body>
+</html> 
