@@ -16,3 +16,20 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 
+# Configure Docker to use /mnt/k3sVolume/docker as data-root
+sudo mkdir -p /etc/docker
+echo '{
+  "data-root": "/mnt/k3sVolume/docker"
+}' | sudo tee /etc/docker/daemon.json > /dev/null
+
+# Move any existing Docker data if it exists (optional)
+if [ -d /var/lib/docker ]; then
+  echo "Moving existing Docker data to /mnt/k3sVolume/docker..."
+  sudo rsync -aP /var/lib/docker/ /mnt/k3sVolume/docker/
+  sudo rm -rf /var/lib/docker
+fi
+
+# Restart Docker to apply config
+sudo systemctl restart docker
+
+echo "Docker installation complete and configured to use /mnt/k3sVolume/docker as data-root."
