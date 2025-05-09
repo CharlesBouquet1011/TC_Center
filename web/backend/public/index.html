@@ -102,12 +102,16 @@
     <div class="container">
         <h2>Déployer une Application</h2>
         <div class="form-group">
-            <label for="helmChartUrl">URL du Chart Helm:</label>
-            <input type="text" id="helmChartUrl" value="bitnami/nginx">
+            <label for="gitlabUrl">URL du projet GitLab:</label>
+            <input type="text" id="gitlabUrl" placeholder="https://gitlab.com/username/project">
         </div>
         <div class="form-group">
-            <label for="releaseName">Nom de la Release:</label>
-            <input type="text" id="releaseName" value="test-nginx">
+            <label for="gitlabToken">Token GitLab:</label>
+            <input type="password" id="gitlabToken" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div class="form-group">
+            <label for="branch">Branche:</label>
+            <input type="text" id="branch" value="main">
         </div>
         <div class="form-group">
             <label for="namespace">Namespace:</label>
@@ -173,8 +177,9 @@
             setLoading('deployButton', 'deployLoading', true);
 
             const data = {
-                helmChartUrl: document.getElementById('helmChartUrl').value,
-                releaseName: document.getElementById('releaseName').value,
+                gitlabUrl: document.getElementById('gitlabUrl').value,
+                gitlabToken: document.getElementById('gitlabToken').value,
+                branch: document.getElementById('branch').value,
                 namespace: document.getElementById('namespace').value
             };
 

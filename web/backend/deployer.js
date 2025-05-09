@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const undeployRouter = require('./undeployer');
+const yaml = require('yaml');
 
 // Fonction pour exécuter des commandes shell
 function execCommand(command) {
@@ -24,7 +25,10 @@ function execCommand(command) {
         // Définir KUBECONFIG pour la commande
         const env = { ...process.env, KUBECONFIG: kubeConfigPath };
         
-        exec(command, { maxBuffer: 1024 * 500, env }, (error, stdout, stderr) => {
+        // Ajouter sudo aux commandes kubectl et helm
+        const finalCommand = command.replace(/^(kubectl|helm)/, 'sudo $1');
+        
+        exec(finalCommand, { maxBuffer: 1024 * 500, env }, (error, stdout, stderr) => {
             if (error) {
                 reject(stderr || stdout || error.message);
             } else {
@@ -32,6 +36,46 @@ function execCommand(command) {
             }
         });
     });
+}
+
+// Fonction pour récupérer les fichiers depuis GitLab
+async function fetchFromGitLab(gitlabUrl, token, branch) {
+    try {
+        // Créer un répertoire temporaire pour le clone
+        const tempDir = path.join(os.tmpdir(), 'gitlab-deploy-' + Date.now());
+        fs.mkdirSync(tempDir, { recursive: true });
+
+        // Nettoyer l'URL GitLab
+        let cleanUrl = gitlabUrl.trim();
+        if (cleanUrl.endsWith('.git')) {
+            cleanUrl = cleanUrl.slice(0, -4);
+        }
+
+        // Construire l'URL de clone avec l'authentification
+        const cloneUrl = `https://oauth2:${token}@${cleanUrl.replace('https://', '')}`;
+
+        console.log('Clonage du dépôt avec l\'URL:', cloneUrl);
+
+        // Cloner le dépôt
+        try {
+            await execCommand(`git clone -b ${branch} ${cloneUrl} ${tempDir}`);
+        } catch (error) {
+            throw new Error(`Erreur lors du clonage du dépôt: ${error.message}`);
+        }
+
+        // Vérifier que les fichiers nécessaires existent
+        const requiredFiles = ['Dockerfile', 'Chart.yaml', 'values.yaml'];
+        for (const file of requiredFiles) {
+            const filePath = path.join(tempDir, file);
+            if (!fs.existsSync(filePath)) {
+                throw new Error(`Le fichier ${file} est manquant dans le dépôt`);
+            }
+        }
+
+        return tempDir;
+    } catch (error) {
+        throw new Error(`Erreur lors de la récupération des fichiers depuis GitLab: ${error.message}`);
+    }
 }
 
 // Fonction pour créer les quotas par défaut
@@ -87,6 +131,8 @@ async function checkPrerequisites() {
         await execCommand('kubectl cluster-info');
         // Vérifier l'accès à Helm
         await execCommand('helm version');
+        // Vérifier l'accès à Git
+        await execCommand('git --version');
         return true;
     } catch (error) {
         throw new Error(`Vérification des prérequis échouée: ${error.message}`);
@@ -95,9 +141,9 @@ async function checkPrerequisites() {
 
 // Route pour le déploiement
 router.post('/', async (req, res) => {
-    const { helmChartUrl, releaseName, namespace } = req.body;
+    const { gitlabUrl, gitlabToken, branch, namespace } = req.body;
 
-    if (!helmChartUrl || !releaseName || !namespace) {
+    if (!gitlabUrl || !gitlabToken || !branch || !namespace) {
         return res.status(400).json({
             error: 'Erreur lors du déploiement',
             details: 'Des paramètres sont manquants.',
@@ -114,52 +160,44 @@ router.post('/', async (req, res) => {
         // Créer les quotas par défaut
         await createDefaultQuotas(namespace);
 
-        // Créer un ServiceAccount
-        const saYaml = `apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: sa-${namespace}
-  namespace: ${namespace}`;
-        
-        await execCommand(`echo '${saYaml}' | kubectl apply -f -`);
+        // Récupérer les fichiers depuis GitLab
+        const tempDir = await fetchFromGitLab(gitlabUrl, gitlabToken, branch);
 
-        // Créer un Role
-        const roleYaml = `apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: role-${namespace}
-  namespace: ${namespace}
-rules:
-  - apiGroups: ["", "apps", "extensions"]
-    resources: ["pods", "services", "deployments"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: ["batch"]
-    resources: ["jobs", "cronjobs"]
-    verbs: ["*"]`;
-        
-        await execCommand(`echo '${roleYaml}' | kubectl apply -f -`);
+        // Trouver le nom de la release
+        let releaseName = null;
+        const chartPath = path.join(tempDir, 'Chart.yaml');
+        if (fs.existsSync(chartPath)) {
+            const chartContent = fs.readFileSync(chartPath, 'utf8');
+            try {
+                const chartObj = yaml.parse(chartContent);
+                if (chartObj && chartObj.name) {
+                    releaseName = chartObj.name;
+                }
+            } catch (e) {
+                // ignore parse error, fallback below
+            }
+        }
+        if (!releaseName) {
+            // Utiliser le nom du dossier du dépôt
+            releaseName = path.basename(gitlabUrl, '.git');
+        }
 
-        // Créer un RoleBinding
-        const bindingYaml = `apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: binding-${namespace}
-  namespace: ${namespace}
-subjects:
-  - kind: ServiceAccount
-    name: sa-${namespace}
-    namespace: ${namespace}
-roleRef:
-  kind: Role
-  name: role-${namespace}
-  apiGroup: rbac.authorization.k8s.io`;
-        
-        await execCommand(`echo '${bindingYaml}' | kubectl apply -f -`);
+        // Construire l'image Docker
+        const imageName = `${releaseName}:latest`;
+        await execCommand(`docker build -t ${imageName} ${tempDir}`);
 
-        // Déployer le chart Helm
+        // Taguer et pousser l'image sur le registre local
+        const localRegistryImage = `localhost:5000/${releaseName}:latest`;
+        await execCommand(`docker tag ${imageName} ${localRegistryImage}`);
+        await execCommand(`docker push ${localRegistryImage}`);
+
+        // Déployer le chart Helm depuis le répertoire local avec l'image du registre local
         const helmOutput = await execCommand(
-            `helm upgrade --install ${releaseName} ${helmChartUrl} --namespace ${namespace} --create-namespace`
+            `helm upgrade --install ${releaseName} ${tempDir} --namespace ${namespace} --create-namespace --set image.repository=localhost:5000/${releaseName} --set image.tag=latest`
         );
+
+        // Nettoyer le répertoire temporaire
+        fs.rmSync(tempDir, { recursive: true, force: true });
 
         res.json({ message: 'Déploiement lancé avec succès', output: helmOutput });
     } catch (err) {
@@ -167,7 +205,7 @@ roleRef:
         res.status(500).json({ 
             error: 'Erreur lors du déploiement', 
             details: err.toString(),
-            message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes et Helm'
+            message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes, Helm, Docker et GitLab Registry'
         });
     }
 });
