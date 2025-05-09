@@ -10,25 +10,7 @@ const yaml = require('yaml');
 // Fonction pour exécuter des commandes shell
 function execCommand(command) {
     return new Promise((resolve, reject) => {
-        // Copier le fichier de configuration k3s dans le répertoire de l'utilisateur
-        const k3sConfig = fs.readFileSync('/etc/rancher/k3s/k3s.yaml', 'utf8');
-        const kubeConfigPath = path.join(os.homedir(), '.kube', 'config');
-        
-        // Assurer que le répertoire .kube existe
-        if (!fs.existsSync(path.dirname(kubeConfigPath))) {
-            fs.mkdirSync(path.dirname(kubeConfigPath), { recursive: true });
-        }
-        
-        // Écrire la configuration
-        fs.writeFileSync(kubeConfigPath, k3sConfig);
-        
-        // Définir KUBECONFIG pour la commande
-        const env = { ...process.env, KUBECONFIG: kubeConfigPath };
-        
-        // Ajouter sudo aux commandes kubectl et helm
-        const finalCommand = command.replace(/^(kubectl|helm)/, 'sudo $1');
-        
-        exec(finalCommand, { maxBuffer: 1024 * 500, env }, (error, stdout, stderr) => {
+        exec(command, { maxBuffer: 1024 * 500 }, (error, stdout, stderr) => {
             if (error) {
                 reject(stderr || stdout || error.message);
             } else {
@@ -139,6 +121,18 @@ async function checkPrerequisites() {
     }
 }
 
+function getLocalIp() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return '127.0.0.1';
+}
+
 // Route pour le déploiement
 router.post('/', async (req, res) => {
     const { gitlabUrl, gitlabToken, branch, namespace } = req.body;
@@ -186,14 +180,15 @@ router.post('/', async (req, res) => {
         const imageName = `${releaseName}:latest`;
         await execCommand(`docker build -t ${imageName} ${tempDir}`);
 
-        // Taguer et pousser l'image sur le registre local
-        const localRegistryImage = `localhost:5000/${releaseName}:latest`;
-        await execCommand(`docker tag ${imageName} ${localRegistryImage}`);
-        await execCommand(`docker push ${localRegistryImage}`);
+        // Utiliser l'IP réseau du serveur pour le registre
+        const registryIp = getLocalIp();
+        const registryImage = `${registryIp}:5000/${releaseName}:latest`;
+        await execCommand(`docker tag ${imageName} ${registryImage}`);
+        await execCommand(`docker push ${registryImage}`);
 
-        // Déployer le chart Helm depuis le répertoire local avec l'image du registre local
+        // Déployer le chart Helm depuis le répertoire local avec l'image du registre réseau
         const helmOutput = await execCommand(
-            `helm upgrade --install ${releaseName} ${tempDir} --namespace ${namespace} --create-namespace --set image.repository=localhost:5000/${releaseName} --set image.tag=latest`
+            `helm upgrade --install ${releaseName} ${tempDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:5000/${releaseName} --set image.tag=latest`
         );
 
         // Nettoyer le répertoire temporaire
@@ -205,7 +200,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ 
             error: 'Erreur lors du déploiement', 
             details: err.toString(),
-            message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes, Helm, Docker et GitLab Registry'
+            message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes, Helm, Docker et le registre privé'
         });
     }
 });

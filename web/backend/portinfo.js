@@ -8,22 +8,7 @@ const path = require('path');
 // Fonction pour exécuter des commandes shell
 function execCommand(command) {
     return new Promise((resolve, reject) => {
-        // Copier le fichier de configuration k3s dans le répertoire de l'utilisateur
-        const k3sConfig = fs.readFileSync('/etc/rancher/k3s/k3s.yaml', 'utf8');
-        const kubeConfigPath = path.join(os.homedir(), '.kube', 'config');
-        
-        // Assurer que le répertoire .kube existe
-        if (!fs.existsSync(path.dirname(kubeConfigPath))) {
-            fs.mkdirSync(path.dirname(kubeConfigPath), { recursive: true });
-        }
-        
-        // Écrire la configuration
-        fs.writeFileSync(kubeConfigPath, k3sConfig);
-        
-        // Définir KUBECONFIG pour la commande
-        const env = { ...process.env, KUBECONFIG: kubeConfigPath };
-        
-        exec(command, { maxBuffer: 1024 * 500, env }, (error, stdout, stderr) => {
+        exec(command, { maxBuffer: 1024 * 500 }, (error, stdout, stderr) => {
             if (error) {
                 reject(stderr || stdout || error.message);
             } else {
