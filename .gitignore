@@ -1,3 +1,26 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+web/backend/node_modules/
+web/backend/package-lock.json
+web/backend/yarn.lock
+.gitignore
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
 /osLive/live
 *.txt
 *.png
@@ -5,5 +28,4 @@
 authorized_keys
 /osLive/hosts
 registries.yaml
-.package-lock.json
 .env
