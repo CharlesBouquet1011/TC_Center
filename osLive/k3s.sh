@@ -60,4 +60,12 @@ if [ "$ROLE" = "master" ]; then
 
 echo "Helm est installé avec succès."
 
+#config trafik:
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm upgrade --install traefik traefik/traefik \
+  --namespace kube-system \
+  --create-namespace \
+  --set crds.enabled=true
+  
 ./grafana.sh
