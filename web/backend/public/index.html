@@ -4,158 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionnaire d'Applications Kubernetes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            position: relative;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        button:hover:not(:disabled) {
-            background-color: #45a049;
-        }
-        button.delete {
-            background-color: #f44336;
-        }
-        button.delete:hover:not(:disabled) {
-            background-color: #da190b;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-            white-space: pre-wrap;
-        }
-        .success {
-            color: #4CAF50;
-        }
-        .error {
-            color: #f44336;
-        }
-        .loading {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        .loading.active {
-            display: block;
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
-<body>
-    <h1>Gestionnaire d'Applications Kubernetes</h1>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <h1 class="text-2xl font-bold text-gray-800">TC Center</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#features" class="text-gray-600 hover:text-blue-600">Fonctionnalités</a>
+                    <a href="#deploy" class="text-gray-600 hover:text-blue-600">Déploiement</a>
+                    <a href="#undeploy" class="text-gray-600 hover:text-blue-600">Suppression</a>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-    <div class="container">
-        <h2>Déployer une Application</h2>
-        <div class="form-group">
-            <label for="gitlabUrl">URL du projet GitLab:</label>
-            <input type="text" id="gitlabUrl" placeholder="https://gitlab.com/username/project">
+    <!-- Hero Section -->
+    <section class="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-5xl font-bold mb-6">Votre Datacenter Intelligent</h2>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">
+                Simplifiez le déploiement et la gestion de vos applications avec notre plateforme
+                intégrée Kubernetes et Docker.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="#deploy" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Commencer
+                </a>
+                <a href="#features" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                    En savoir plus
+                </a>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="gitlabToken">Token GitLab:</label>
-            <input type="password" id="gitlabToken" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx">
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Fonctionnalités Principales</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Déploiement Automatisé</h3>
+                    <p class="text-gray-600">
+                        Déployez vos applications Docker sur Kubernetes en quelques clics avec notre interface intuitive.
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Monitoring en Temps Réel</h3>
+                    <p class="text-gray-600">
+                        Surveillez vos applications et ressources en temps réel avec des tableaux de bord détaillés.
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Sécurité Avancée</h3>
+                    <p class="text-gray-600">
+                        Bénéficiez d'une infrastructure sécurisée avec des quotas et des limites de ressources.
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="branch">Branche:</label>
-            <input type="text" id="branch" value="main">
+    </section>
+
+    <div id="deploy" class="container mx-auto px-4 py-8 max-w-4xl">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Gestionnaire d'Applications Kubernetes</h1>
+
+        <!-- Section Déploiement -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Déployer une Application</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="gitlabUrl" class="block text-sm font-medium text-gray-700">URL du projet GitLab:</label>
+                    <input type="text" id="gitlabUrl" placeholder="https://gitlab.com/username/project"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="gitlabToken" class="block text-sm font-medium text-gray-700">Token GitLab:</label>
+                    <input type="password" id="gitlabToken" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="branch" class="block text-sm font-medium text-gray-700">Branche:</label>
+                    <input type="text" id="branch" value="main"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="namespace" class="block text-sm font-medium text-gray-700">Namespace:</label>
+                    <input type="text" id="namespace" value="client-d"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button id="deployButton" onclick="deployApp()"
+                    class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
+                    Déployer
+                    <div class="loading hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" id="deployLoading"></div>
+                </button>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="namespace">Namespace:</label>
-            <input type="text" id="namespace" value="client-d">
+
+        <!-- Section Vérification des Ports -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Vérifier les Ports</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="checkReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release:</label>
+                    <input type="text" id="checkReleaseName" value="test-nginx"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="checkNamespace" class="block text-sm font-medium text-gray-700">Namespace:</label>
+                    <input type="text" id="checkNamespace" value="client-d"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button id="checkButton" onclick="checkPorts()"
+                    class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
+                    Vérifier les Ports
+                    <div class="loading hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" id="checkLoading"></div>
+                </button>
+            </div>
         </div>
-        <button id="deployButton" onclick="deployApp()">
-            Déployer
-            <div class="loading" id="deployLoading"></div>
-        </button>
+
+        <!-- Section Suppression -->
+        <div id="undeploy" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Supprimer une Application</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="deleteReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release:</label>
+                    <input type="text" id="deleteReleaseName" value="test-nginx"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="deleteNamespace" class="block text-sm font-medium text-gray-700">Namespace:</label>
+                    <input type="text" id="deleteNamespace" value="client-d"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button id="deleteButton" onclick="deleteApp()"
+                    class="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
+                    Supprimer
+                    <div class="loading hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" id="deleteLoading"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Zone de résultat -->
+        <div id="result" class="bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
-
-    <div class="container">
-        <h2>Vérifier les Ports</h2>
-        <div class="form-group">
-            <label for="checkReleaseName">Nom de la Release:</label>
-            <input type="text" id="checkReleaseName" value="test-nginx">
-        </div>
-        <div class="form-group">
-            <label for="checkNamespace">Namespace:</label>
-            <input type="text" id="checkNamespace" value="client-d">
-        </div>
-        <button id="checkButton" onclick="checkPorts()">
-            Vérifier les Ports
-            <div class="loading" id="checkLoading"></div>
-        </button>
-    </div>
-
-    <div class="container">
-        <h2>Supprimer une Application</h2>
-        <div class="form-group">
-            <label for="deleteReleaseName">Nom de la Release:</label>
-            <input type="text" id="deleteReleaseName" value="test-nginx">
-        </div>
-        <div class="form-group">
-            <label for="deleteNamespace">Namespace:</label>
-            <input type="text" id="deleteNamespace" value="client-d">
-        </div>
-        <button id="deleteButton" class="delete" onclick="deleteApp()">
-            Supprimer
-            <div class="loading" id="deleteLoading"></div>
-        </button>
-    </div>
-
-    <div id="result"></div>
 
     <script>
         let isProcessing = false;
@@ -165,9 +184,9 @@
             const loading = document.getElementById(loadingId);
             button.disabled = isLoading;
             if (isLoading) {
-                loading.classList.add('active');
+                loading.classList.remove('hidden');
             } else {
-                loading.classList.remove('active');
+                loading.classList.add('hidden');
             }
         }
 
@@ -252,7 +271,7 @@
         function displayResult(result, success) {
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = JSON.stringify(result, null, 2);
-            resultDiv.className = success ? 'success' : 'error';
+            resultDiv.className = `bg-white rounded-lg shadow-lg p-6 font-mono text-sm ${success ? 'text-green-600' : 'text-red-600'}`;
         }
     </script>
 </body>
