@@ -59,3 +59,5 @@ if [ "$ROLE" = "master" ]; then
     fi
 
 echo "Helm est installé avec succès."
+
+./grafana.sh
