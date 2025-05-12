@@ -40,7 +40,7 @@ elif [ "$ROLE" = "agent" ]; then
     INSTALL_K3S_SKIP_ENABLE=true \
     K3S_URL="https://$MASTER_IP:6443" \
     K3S_TOKEN=TC-Center \
-    INSTALL_K3S_EXEC="agent --snapshotter=fuse-overlayfs" \
+    INSTALL_K3S_EXEC="agent --snapshotter=fuse-overlayfs --data-dir /mnt/k3sVolume/k3s"  \
     ./install-k3s.sh
     #configuration du repo k3s
     sudo systemctl start k3s-agent

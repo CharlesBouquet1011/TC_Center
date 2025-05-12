@@ -39,6 +39,8 @@ echo initramfs-tools >> config/package-lists/desktop.list.chroot #pour longhorn
 
 #serveur ssh
 echo openssh-server >> config/package-lists/desktop.list.chroot
+#longhorn
+echo open-iscsi >> config/package-lists/desktop.list.chroot
 
 #shell
 # echo bash >> config/package-lists/desktop.list.chroot
