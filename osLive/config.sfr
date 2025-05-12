@@ -35,6 +35,8 @@ echo console-data >> config/package-lists/desktop.list.chroot
 echo console-setup >> config/package-lists/desktop.list.chroot
 echo cifs-utils >> config/package-lists/desktop.list.chroot
 echo openconnect >> config/package-lists/desktop.list.chroot
+echo initramfs-tools >> config/package-lists/desktop.list.chroot #pour longhorn
+
 #serveur ssh
 echo openssh-server >> config/package-lists/desktop.list.chroot
 

@@ -35,3 +35,26 @@ ou `echo 'TON_MDP_OU_TOKEN' | docker login docker.io --username monuser --passwo
 `helm upgrade --install k8s-monitoring grafana/k8s-monitoring --namespace monitoring --create-namespace -f ~/mnt/k3sVolume/values.yaml`
 `helm install opentelemetry-operator open-telemetry/opentelemetry-operator --namespace monitoring --create-namespace --set manager.collectorImage.repository=ghcr.io/open-telemetry/opentelemetry-collector-contrib --set manager.collectorImage.tag=latest`
 `kubectl apply -f /mnt/k3sVolume/otel-collector.yaml`
+
+
+# Longhorn
+Longhorn sert à avoir une solution de stockage distribuée:
+installation avec:
+`kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml  `
+
+utilisation avec:
+``` 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "tonchart.fullname" . }}-data
+  annotations:
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: longhorn
+```
