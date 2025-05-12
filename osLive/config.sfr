@@ -50,6 +50,8 @@ echo sudo >> config/package-lists/desktop.list.chroot
 echo gnome-terminal >> config/package-lists/desktop.list.chroot
 
 # podman
+echo uidmap >> config/package-lists/desktop.list.chroot
+echo slirp4netns >> config/package-lists/desktop.list.chroot
 echo podman >> config/package-lists/desktop.list.chroot
 
 # eduroam / startnet / startvpn 

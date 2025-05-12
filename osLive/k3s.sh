@@ -81,3 +81,28 @@ else
     exit 1
 fi
 kubectl -n longhorn-system delete pod -l app=longhorn-manager
+
+
+#config podman:
+
+cat > home/user/.config/containers/registries.conf <<EOF
+unqualified-search-registries = ["docker.io"]
+
+[[registry]]
+prefix = "docker.io"
+location = "docker.io"
+
+[[registry]]
+prefix = "134.214.202.221:5000"
+insecure = true
+location = "134.214.202.221:5000"
+EOF
+
+cat > /home/user/.config/containers/storage.conf <<EOF
+[storage]
+  driver = "overlay"
+  graphRoot = "${HOME}/.local/share/containers/storage"
+  runRoot = "${XDG_RUNTIME_DIR}/containers"
+[storage.options]
+  mount_program = "/usr/bin/fuse-overlayfs"
+EOF
