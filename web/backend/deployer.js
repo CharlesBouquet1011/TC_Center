@@ -176,15 +176,15 @@ router.post('/', async (req, res) => {
             releaseName = path.basename(gitlabUrl, '.git');
         }
 
-        // Construire l'image Docker
+        // Construire l'image Podman
         const imageName = `${releaseName}:latest`;
-        await execCommand(`docker build -t ${imageName} ${tempDir}`);
+        await execCommand(`podman build -t ${imageName} ${tempDir}`);
 
         // Utiliser l'IP réseau du serveur pour le registre
         const registryIp = getLocalIp();
         const registryImage = `${registryIp}:5000/${releaseName}:latest`;
-        await execCommand(`docker tag ${imageName} ${registryImage}`);
-        await execCommand(`docker push ${registryImage}`);
+        await execCommand(`podman tag ${imageName} ${registryImage}`);
+        await execCommand(`podman push ${registryImage}`);
 
         // Déployer le chart Helm depuis le répertoire local avec l'image du registre réseau
         const helmOutput = await execCommand(
