@@ -56,16 +56,20 @@ rm ./install-k3s.sh
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 if [ "$ROLE" = "master" ]; then
     echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/user/.bashrc
+    #config trafik:
+    helm repo add traefik https://traefik.github.io/charts
+    helm repo update
+    helm upgrade --install traefik traefik/traefik \
+    --namespace kube-system \
+    --create-namespace \
+    --set crds.enabled=true
+    
+    ./grafana.sh
     fi
 
 echo "Helm est installé avec succès."
 
-#config trafik:
-helm repo add traefik https://traefik.github.io/charts
-helm repo update
-helm upgrade --install traefik traefik/traefik \
-  --namespace kube-system \
-  --create-namespace \
-  --set crds.enabled=true
-  
-./grafana.sh
+#longhorn
+sudo rm /etc/initramfs/post-update.d/z50-raspi-firmware
+sudo dpkg --configure -a
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
