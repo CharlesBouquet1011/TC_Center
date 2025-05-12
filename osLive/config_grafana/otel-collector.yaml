@@ -1,0 +1,28 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: my-otel-collector
+  namespace: monitoring
+spec:
+  mode: deployment
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc: {}
+          http: {}
+
+    exporters:
+      prometheusremotewrite:
+        endpoint: lien
+        headers:
+          Authorization: Basic cle
+      logging:
+        loglevel: debug
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          exporters: [prometheusremotewrite, logging]
+
