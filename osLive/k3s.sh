@@ -73,3 +73,11 @@ echo "Helm est installé avec succès."
 sudo rm /etc/initramfs/post-update.d/z50-raspi-firmware
 sudo dpkg --configure -a
 kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
+sudo mkdir -p /mnt/k3sVolume/longhorn
+if [ -d /mnt/k3sVolume/longhorn ]; then
+    sudo mount --bind /mnt/k3sVolume/longhorn /var/lib/longhorn
+else
+    echo "Erreur : le dossier /mnt/k3sVolume/longhorn n'existe pas."
+    exit 1
+fi
+kubectl -n longhorn-system delete pod -l app=longhorn-manager
