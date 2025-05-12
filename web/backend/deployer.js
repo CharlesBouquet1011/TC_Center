@@ -185,6 +185,17 @@ router.post('/', async (req, res) => {
         const registryImage = `${registryIp}:5000/${releaseName}:latest`;
         await execCommand(`docker tag ${imageName} ${registryImage}`);
         await execCommand(`docker push ${registryImage}`);
+        const execCommand = (cmd) => {
+            return new Promise((resolve, reject) => {
+                const child = exec(cmd, { env: { ...process.env, KUBECONFIG: '/etc/rancher/k3s/k3s.yaml' } }, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(stderr);
+                        return reject(error);
+                    }
+                    resolve(stdout.trim());
+                });
+            });
+        };
 
         // Déployer le chart Helm depuis le répertoire local avec l'image du registre réseau
         const helmOutput = await execCommand(
