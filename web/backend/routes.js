@@ -1,8 +1,20 @@
 const express = require('express');
 const router = express.Router();
+const sqlite3 = require('sqlite3').verbose();
 const { deployRouter, undeployRouter } = require('./deployer');
 const portInfoRouter = require('./portinfo');
 const { execCommand } = require('./k3sExec');
+
+// Connection à la base de données
+const db = new sqlite3.Database('./users.db');
+
+// Création de la table si elle n'existe pas
+db.run(`CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
 
 // Route pour le déploiement
 router.use('/deploy', deployRouter);

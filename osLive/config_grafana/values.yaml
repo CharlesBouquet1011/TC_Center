@@ -1,0 +1,23 @@
+cluster:
+  name: my-cluster
+destinations:
+  - name: grafana-cloud-metrics
+    type: prometheus
+    url: lien
+    auth:
+      type: basic
+      username: "username"
+      password: mdp
+  - name: grafana-cloud-logs
+    type: loki
+    url: lien
+    auth:
+      type: basic
+      username: "username"
+      password: mdp
+logs:
+  enabled: true
+metrics:
+  enabled: true
+traces:
+  enabled: false

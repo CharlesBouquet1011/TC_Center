@@ -39,6 +39,8 @@ echo initramfs-tools >> config/package-lists/desktop.list.chroot #pour longhorn
 
 #serveur ssh
 echo openssh-server >> config/package-lists/desktop.list.chroot
+#longhorn
+echo open-iscsi >> config/package-lists/desktop.list.chroot
 
 #shell
 # echo bash >> config/package-lists/desktop.list.chroot
@@ -50,6 +52,8 @@ echo sudo >> config/package-lists/desktop.list.chroot
 echo gnome-terminal >> config/package-lists/desktop.list.chroot
 
 # podman
+echo uidmap >> config/package-lists/desktop.list.chroot
+echo slirp4netns >> config/package-lists/desktop.list.chroot
 echo podman >> config/package-lists/desktop.list.chroot
 
 # eduroam / startnet / startvpn 

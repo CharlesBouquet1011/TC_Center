@@ -2,6 +2,7 @@
 Description=Ask user info at boottime
 After=network-online.target
 Wants=network-online.target
+Requires=startmount.service
 Before=lightdm.service
 
 [Service]
