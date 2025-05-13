@@ -17,6 +17,7 @@ Cela inclut :
 - La structure standard d’un chart Helm (`Chart.yaml`, `values.yaml`, `templates/`, etc.)
 
 > 📚 Consultez la [documentation officielle de Helm](https://helm.sh/docs/chart_template_guide/) pour plus de détails.
+> ℹ️ Si vous avez besoin de plus d'aide ou d'un exemple concret, référez-vous au guide **Guid_helm**.
 
 ## 3. Accéder à la plateforme TC Center
 
