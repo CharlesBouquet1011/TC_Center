@@ -307,9 +307,10 @@
         let term, ws;
         function openTerminal() {
             const releaseName = document.getElementById('terminalReleaseName').value;
-            const namespace = document.getElementById('namespace').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
             if (!releaseName || !namespace) {
-                alert('Sélectionnez une release et un namespace');
+                alert('Sélectionnez une release');
                 return;
             }
             if (term) {
