@@ -5,10 +5,12 @@
 Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
 > ⚠️ TC Center ne prend pas en charge la résolution de problèmes liés à votre code.
 
-Une fois votre application testée et stable, vous devez la **conteneuriser**.  
-Pour cela, utilisez **Docker** ou un service équivalent. Le conteneur doit être autonome et prêt à être déployé.
+Pour pouvoir accéder a votre code il faut qu'il soit déposé sur github ou sur gitlab (dans un dépôt public ou privé selon votre préférence).
 
-## 2. Écrire un Helm Chart
+Une fois votre application testée et stable, vous devez la **conteneuriser**.  
+Pour cela, utilisez **Docker** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
+
+## 2. Créer un Helm Chart
 
 Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.  
 Cela inclut :
@@ -27,20 +29,56 @@ Rendez-vous sur [tc.insa-lyon.fr](https://tc.insa-lyon.fr).
 - Sinon, connectez-vous avec vos identifiants.
 
 Une fois connecté, vous pourrez :
-- Déposer votre Helm chart
 - Déployer vos applications dans un **namespace** associé à votre compte
-- Suivre vos déploiements à l’aide de leur **release name** (nom unique pour chaque application)
+- Suivre vos déploiements à l’aide de leur **release name** (nom unique pour chaque application, défini dans le helm chart)
+- Supprimer une application à partir de sa release name.
 
-## 4. Surveiller le comportement de vos applications
+## 4. Déployer une application
 
-TC Center fournit une interface de monitoring qui vous permet de :
+Pour déployer une application depuis un dépôt Git vers votre datacenter, suivez les étapes ci-dessous.
+
+---
+
+### Étape 1 — Générer un token d'accès
+
+Vous devez créer un **token d'accès personnel** afin d’autoriser l'accès sécurisé au code source du projet.
+
+- Rendez-vous sur la page de gestion des tokens de votre plateforme Git (par exemple, GitLab : `https://gitlab.com/-/profile/personal_access_tokens`)
+- Créez un nouveau token avec **les scopes suivants** :
+  - `api`
+  - `read_repository`
+- Donnez-lui un nom explicite (par exemple : `deploy-token-datacenter`)
+- Copiez le token : vous ne pourrez plus le voir après validation
+
+
+---
+
+### Étape 2 — Renseigner l’URL et le token sur notre plateforme
+
+Une fois connecte a votre compte vous aurez acces a une page de dépot ou vous pourrez :
+
+- Collez l’**URL du dépôt Git** à cloner (utilisez le lien en HTTPS) :
+  ```text
+  https://gitlab.com/votre-projet/mon-app.git
+  ```
+- Collez votre token d'acces au dépôt
+---
+
+
+### Étape 3 — Validez la soumission de votre application
+Une fois le déploiement fini vous verrez un message s'afficher en bas de page:
+- Un message d'erreur si le déploiement a echoué. Dans ce cas il faudra de votre côté corriger le probleme avant de retenter un déploiement.
+- Un message de confirmation signifiant que le déploiement s'est déroulé sans erreurs.
+
+## 5. Ouvrir un terminal dans votre pod? 
+un truc du genre
+
 - Suivre le comportement de vos applications en temps réel
 - Détecter rapidement les erreurs ou dysfonctionnements
-- Surveiller les ressources consommées et le **coût d’hébergement**
 
 > 🔍 Pensez à consulter régulièrement cette interface pour assurer la stabilité de vos services.
 
-## 5. Supprimer une application
+## 6. Supprimer une application
 
 Si vous souhaitez arrêter d’héberger une application :
 1. Accédez à l’onglet de suppression.
