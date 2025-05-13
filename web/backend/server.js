@@ -5,9 +5,9 @@ const { execSync } = require('child_process');
 
 const app = express();
 const port = 3000;
-const REGISTRY_PORT = 5001; // port rootless
+const REGISTRY_PORT = 5000; // port pour le registre
 
-// Lancer le registre Podman rootless local si besoin
+// Lancer le registre Podman local si besoin
 function ensureLocalRegistry() {
     try {
         // Vérifier si un conteneur nommé 'registry' existe
@@ -25,15 +25,15 @@ function ensureLocalRegistry() {
                 console.log('Le conteneur registry existe mais n\'est pas lancé, démarrage...');
                 execSync('podman start registry');
             } else {
-                console.log('Le registre Podman rootless est déjà lancé.');
+                console.log('Le registre Podman est déjà lancé.');
             }
         } else {
             // Le conteneur n'existe pas, on le crée
-            console.log(`Lancement du registre Podman rootless sur le port ${REGISTRY_PORT}...`);
+            console.log(`Lancement du registre Podman sur le port ${REGISTRY_PORT}...`);
             execSync(`podman run -d -p ${REGISTRY_PORT}:5000 --name registry registry:2`);
         }
     } catch (err) {
-        console.error('Erreur lors du lancement du registre Podman rootless :', err.message);
+        console.error('Erreur lors du lancement du registre Podman :', err.message);
     }
 }
 
