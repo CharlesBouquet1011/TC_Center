@@ -4,6 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 const { deployRouter, undeployRouter } = require('./deployer');
 const portInfoRouter = require('./portinfo');
 const { execCommand } = require('./k3sExec');
+const bcrypt = require('bcrypt');
+
 
 // Connexion à la base de données
 const db = new sqlite3.Database('./users.db');
@@ -64,17 +66,24 @@ router.post('/register', (req, res) => {
       }
     }
 
-    // Ajouter le nouvel utilisateur
-    db.run(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-      [username, email, password],
-      function(err) {
-        if (err) {
-          return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
-        }
-        res.status(201).json({ message: 'Inscription réussie' });
+    // Hacher le mot de passe avant de l'enregistrer
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erreur lors du hachage du mot de passe' });
       }
-    );
+
+      // Ajouter le nouvel utilisateur avec le mot de passe haché
+      db.run(
+        'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+        [username, email, hashedPassword],
+        function(err) {
+          if (err) {
+            return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
+          }
+          res.status(201).json({ message: 'Inscription réussie' });
+        }
+      );
+    });
   });
 });
 
@@ -88,14 +97,27 @@ router.post('/login', (req, res) => {
 
   // Vérifier si l'utilisateur existe (par email ou username)
   db.get(
-    'SELECT * FROM users WHERE (email = ? OR username = ?) AND password = ?',
-    [identifier, identifier, password],
+    'SELECT * FROM users WHERE email = ? OR username = ?',
+    [identifier, identifier],
     (err, row) => {
       if (err) {
         return res.status(500).json({ message: 'Erreur lors de la connexion' });
       }
 
-      if (row) {
+      if (!row) {
+        return res.status(401).json({ message: 'Identifiants incorrects' });
+      }
+
+      // Vérifier le mot de passe haché
+      bcrypt.compare(password, row.password, (err, isMatch) => {
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de la vérification du mot de passe' });
+        }
+
+        if (!isMatch) {
+          return res.status(401).json({ message: 'Identifiants incorrects' });
+        }
+
         // Connexion réussie
         res.status(200).json({
           message: 'Connexion réussie',
@@ -104,31 +126,31 @@ router.post('/login', (req, res) => {
             username: row.username
           }
         });
-      } else {
-        res.status(401).json({ message: 'Identifiants incorrects' });
-      }
+      });
     }
   );
 });
 
 // Route pour ajouter un utilisateur (gardée pour compatibilité)
 router.post('/addUser', (req, res) => {
-  const { username, password } = req.body;
+    const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).send('Champs requis manquants');
-  }
-
-  db.run(
-    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-    [username, `${username}@insa-lyon.fr`, password],
-    function(err) {
+    if (!username || !password) {
+      return res.status(400).send('Champs requis manquants');
+    }
+  
+    bcrypt.hash(password, saltRounds, (err, hash) => {
       if (err) {
         return res.status(500).send(err.message);
       }
-      res.status(200).send({ id: this.lastID });
-    }
-  );
-});
+  
+      db.run(`INSERT INTO users (username, password) VALUES (?, ?)`, [username, hash], function(err) {
+        if (err) {
+          return res.status(500).send(err.message);
+        }
+        res.status(200).send({ id: this.lastID });
+      });
+    });
+  });
 
 module.exports = router;
