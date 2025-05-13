@@ -56,6 +56,34 @@ router.post('/register', (req, res) => {
   });
 });
 
+// Route pour la connexion
+router.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email et mot de passe requis' });
+  }
+
+  // Vérifier si l'utilisateur existe
+  db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, password], (err, row) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erreur lors de la connexion' });
+    }
+
+    if (row) {
+      // Connexion réussie
+      res.status(200).json({ 
+        message: 'Connexion réussie',
+        user: {
+          email: row.email
+        }
+      });
+    } else {
+      res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }
+  });
+});
+
 // Route pour ajouter un utilisateur (gardée pour la compatibilité)
 router.post('/addUser', (req, res) => {
   const { username, password } = req.body;

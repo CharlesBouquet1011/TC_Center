@@ -104,14 +104,33 @@
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
 
-            // Vérification des identifiants de test
-            if (email === 'test@insa-lyon.fr' && password === 'test123') {
-                // Connexion réussie
-                localStorage.setItem('username', 'Test User');
-                localStorage.setItem('isAuthenticated', 'true');
-                window.location.href = 'dashboard.html';
-            } else {
-                errorMessage.textContent = 'Identifiants incorrects. Utilisez test@insa-lyon.fr / test123';
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Extraire le prénom de l'email (premier mot avant le point)
+                    const prenom = email.split('.')[0];
+                    // Mettre la première lettre en majuscule
+                    const prenomCapitalized = prenom.charAt(0).toUpperCase() + prenom.slice(1);
+                    
+                    // Connexion réussie
+                    localStorage.setItem('username', prenomCapitalized);
+                    localStorage.setItem('isAuthenticated', 'true');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorMessage.textContent = result.message || 'Erreur lors de la connexion';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Erreur lors de la connexion';
                 errorMessage.classList.remove('hidden');
             }
         });

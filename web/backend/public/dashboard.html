@@ -58,11 +58,6 @@
                     <input type="text" id="branch" value="main"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label for="namespace" class="block text-sm font-medium text-gray-700">Namespace:</label>
-                    <input type="text" id="namespace" value="client-d"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
                 <button id="deployButton" onclick="deployApp()"
                     class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
                     Déployer
@@ -80,11 +75,6 @@
                     <input type="text" id="checkReleaseName" value="test-nginx"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label for="checkNamespace" class="block text-sm font-medium text-gray-700">Namespace:</label>
-                    <input type="text" id="checkNamespace" value="client-d"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
                 <button id="checkButton" onclick="checkPorts()"
                     class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
                     Vérifier les Ports
@@ -100,11 +90,6 @@
                 <div>
                     <label for="deleteReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release:</label>
                     <input type="text" id="deleteReleaseName" value="test-nginx"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="deleteNamespace" class="block text-sm font-medium text-gray-700">Namespace:</label>
-                    <input type="text" id="deleteNamespace" value="client-d"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <button id="deleteButton" onclick="deleteApp()"
@@ -163,11 +148,14 @@
             isProcessing = true;
             setLoading('deployButton', 'deployLoading', true);
 
+            const username = localStorage.getItem('username');
+            const namespace = username.toLowerCase();
+
             const data = {
                 gitlabUrl: document.getElementById('gitlabUrl').value,
                 gitlabToken: document.getElementById('gitlabToken').value,
                 branch: document.getElementById('branch').value,
-                namespace: document.getElementById('namespace').value
+                namespace: namespace
             };
 
             try {
@@ -193,8 +181,9 @@
             isProcessing = true;
             setLoading('checkButton', 'checkLoading', true);
 
+            const username = localStorage.getItem('username');
+            const namespace = username.toLowerCase();
             const releaseName = document.getElementById('checkReleaseName').value;
-            const namespace = document.getElementById('checkNamespace').value;
 
             try {
                 const response = await fetch(`/ports?releaseName=${releaseName}&namespace=${namespace}`);
@@ -213,9 +202,13 @@
             isProcessing = true;
             setLoading('deleteButton', 'deleteLoading', true);
 
+            const username = localStorage.getItem('username');
+            const namespace = username.toLowerCase();
+            const releaseName = document.getElementById('deleteReleaseName').value;
+
             const data = {
-                releaseName: document.getElementById('deleteReleaseName').value,
-                namespace: document.getElementById('deleteNamespace').value
+                releaseName: releaseName,
+                namespace: namespace
             };
 
             try {
