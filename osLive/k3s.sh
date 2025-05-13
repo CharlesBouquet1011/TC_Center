@@ -1,5 +1,5 @@
 #!/bin/bash
-
+/usr/local/bin/startmount.sh
 # === CONFIGURATION ===
 while true; do
     ROLE=$(systemd-ask-password --echo "Quel rôle pour ce nœud ? (master/agent)")
