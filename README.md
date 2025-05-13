@@ -12,10 +12,12 @@ Dans le dossier `docs` de ce dépôt Git, vous trouverez deux sections distincte
 
 - **Section utilisateur** : destinée aux développeurs souhaitant héberger une ou plusieurs applications sur notre datacenter.  
   Elle fournit un guide complet, depuis les bonnes pratiques de développement jusqu’à l’obtention d’un hébergement fonctionnel sur notre infrastructure.
+  [Guide_utilisateur](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/utilisateur/Guide_utilisateur.md)
 
 - **Section administrateur** : destinée aux personnes intéressées par l’infrastructure elle-même.  
   Elle détaille le matériel utilisé, les outils mis en place, ainsi que les différentes configurations déployées.  
   Cette section s'adresse aux développeurs ou administrateurs souhaitant comprendre le fonctionnement interne de notre datacenter ou en reproduire l’installation.
+  [Guide_admin](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/Commandes.md)
 
 > 📁 Ce dossier s’adresse à la fois aux utilisateurs finaux de notre service d’hébergement et aux développeurs souhaitant se documenter sur la mise en place d’un datacenter.
 

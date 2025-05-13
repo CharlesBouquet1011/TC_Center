@@ -3,6 +3,7 @@ const router = express.Router();
 const sqlite3 = require('sqlite3').verbose();
 const { deployRouter, undeployRouter } = require('./deployer');
 const portInfoRouter = require('./portinfo');
+const { execCommand } = require('./k3sExec');
 
 // Connection à la base de données
 const db = new sqlite3.Database('./users.db');
@@ -24,52 +25,19 @@ router.use('/undeploy', undeployRouter);
 // Route pour les informations de port
 router.use('/ports', portInfoRouter);
 
-// Route pour l'inscription
-router.post('/register', (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Tous les champs sont requis' });
-  }
-
-  // Vérifier si l'email est déjà utilisé
-  db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
-    if (err) {
-      return res.status(500).json({ message: 'Erreur lors de la vérification de l\'email' });
+// Nouvelle route pour lister les releases Helm d'un namespace
+router.get('/releases', async (req, res) => {
+    const { namespace } = req.query;
+    if (!namespace) {
+        return res.status(400).json({ error: 'Namespace requis' });
     }
-
-    if (row) {
-      return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+    try {
+        const output = await execCommand(`helm list -n ${namespace} -o json`);
+        const releases = JSON.parse(output);
+        res.json(releases);
+    } catch (err) {
+        res.status(500).json({ error: 'Erreur lors de la récupération des releases', details: err.toString() });
     }
-
-    // Ajouter le nouvel utilisateur
-    db.run(
-      'INSERT INTO users (email, password) VALUES (?, ?)',
-      [email, password],
-      function(err) {
-        if (err) {
-          return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
-        }
-        res.status(201).json({ message: 'Inscription réussie' });
-      }
-    );
-  });
 });
 
-// Route pour ajouter un utilisateur (gardée pour la compatibilité)
-router.post('/addUser', (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).send('Champs requis manquants');
-  }
-
-  db.run(`INSERT INTO users (email, password) VALUES (?, ?)`, [username, password], function(err) {
-    if (err) {
-      return res.status(500).send(err.message);
-    }
-    res.status(200).send({ id: this.lastID });
-  });
-});
-
-module.exports = router;
+module.exports = router; 

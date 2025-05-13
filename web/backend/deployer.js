@@ -6,19 +6,9 @@ const os = require('os');
 const path = require('path');
 const undeployRouter = require('./undeployer');
 const yaml = require('yaml');
+const { execCommand } = require('./k3sExec');
 
-// Fonction pour exécuter des commandes shell
-function execCommand(command) {
-    return new Promise((resolve, reject) => {
-        exec(command, { maxBuffer: 1024 * 500 }, (error, stdout, stderr) => {
-            if (error) {
-                reject(stderr || stdout || error.message);
-            } else {
-                resolve(stdout);
-            }
-        });
-    });
-}
+const REGISTRY_PORT = 5000;
 
 // Fonction pour récupérer les fichiers depuis GitLab
 async function fetchFromGitLab(gitlabUrl, token, branch) {
@@ -109,15 +99,12 @@ spec:
 // Vérification des prérequis
 async function checkPrerequisites() {
     try {
-        // Vérifier l'accès à Kubernetes
         await execCommand('kubectl cluster-info');
-        // Vérifier l'accès à Helm
         await execCommand('helm version');
-        // Vérifier l'accès à Git
-        await execCommand('git --version');
+        await execCommand('podman --version');
         return true;
     } catch (error) {
-        throw new Error(`Vérification des prérequis échouée: ${error.message}`);
+        throw new Error(`Vérification des prérequis échouée: ${error}`);
     }
 }
 
@@ -182,13 +169,13 @@ router.post('/', async (req, res) => {
 
         // Utiliser l'IP réseau du serveur pour le registre
         const registryIp = getLocalIp();
-        const registryImage = `${registryIp}:5000/${releaseName}:latest`;
+        const registryImage = `${registryIp}:${REGISTRY_PORT}/${releaseName}:latest`;
         await execCommand(`podman tag ${imageName} ${registryImage}`);
         await execCommand(`podman push ${registryImage}`);
 
         // Déployer le chart Helm depuis le répertoire local avec l'image du registre réseau
         const helmOutput = await execCommand(
-            `helm upgrade --install ${releaseName} ${tempDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:5000/${releaseName} --set image.tag=latest`
+            `helm upgrade --install ${releaseName} ${tempDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:${REGISTRY_PORT}/${releaseName} --set image.tag=latest`
         );
 
         // Nettoyer le répertoire temporaire

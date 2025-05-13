@@ -1,22 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { exec } = require('child_process');
+const { execCommand } = require('./k3sExec');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-
-// Fonction pour exécuter des commandes shell
-function execCommand(command) {
-    return new Promise((resolve, reject) => {
-        exec(command, { maxBuffer: 1024 * 500 }, (error, stdout, stderr) => {
-            if (error) {
-                reject(stderr || stdout || error.message);
-            } else {
-                resolve(stdout);
-            }
-        });
-    });
-}
 
 // Route pour obtenir les informations de port d'une application
 router.get('/', async (req, res) => {
