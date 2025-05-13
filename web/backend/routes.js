@@ -31,12 +31,72 @@ router.get('/releases', async (req, res) => {
     if (!namespace) {
         return res.status(400).json({ error: 'Namespace requis' });
     }
+
     try {
         const output = await execCommand(`helm list -n ${namespace} -o json`);
         const releases = JSON.parse(output);
         res.json(releases);
     } catch (err) {
         res.status(500).json({ error: 'Erreur lors de la récupération des releases', details: err.toString() });
+
+
+    if (row) {
+      return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+    }
+
+    // Ajouter le nouvel utilisateur
+    db.run(
+      'INSERT INTO users (email, password) VALUES (?, ?)',
+      [email, password],
+      function(err) {
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
+        }
+        res.status(201).json({ message: 'Inscription réussie' });
+      }
+    );
+  });
+});
+
+// Route pour la connexion
+router.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email et mot de passe requis' });
+  }
+
+  // Vérifier si l'utilisateur existe
+  db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, password], (err, row) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erreur lors de la connexion' });
+    }
+
+    if (row) {
+      // Connexion réussie
+      res.status(200).json({ 
+        message: 'Connexion réussie',
+        user: {
+          email: row.email
+        }
+      });
+    } else {
+      res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }
+  });
+});
+
+// Route pour ajouter un utilisateur (gardée pour la compatibilité)
+router.post('/addUser', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send('Champs requis manquants');
+  }
+
+  db.run(`INSERT INTO users (email, password) VALUES (?, ?)`, [username, password], function(err) {
+    if (err) {
+      return res.status(500).send(err.message);
     }
 });
 
