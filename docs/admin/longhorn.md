@@ -4,7 +4,7 @@ installation avec:
 `kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml  `
 
 utilisation avec:
-``` 
+```yaml 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
