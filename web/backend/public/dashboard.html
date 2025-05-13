@@ -11,6 +11,8 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -107,6 +109,19 @@
             </div>
         </div>
 
+        <!-- Section Terminal -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Terminal sur un Pod</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="terminalReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release (pod) :</label>
+                    <select id="terminalReleaseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                </div>
+                <button id="openTerminalButton" onclick="openTerminal()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">Ouvrir le terminal</button>
+                <div id="terminal" class="mt-4" style="height: 300px; width: 100%; background: #1a1a1a; border-radius: 8px;"></div>
+            </div>
+        </div>
+
         <!-- Zone de résultat -->
         <div id="result" class="bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
@@ -152,8 +167,7 @@
             isProcessing = true;
             setLoading('deployButton', 'deployLoading', true);
 
-            const username = localStorage.getItem('username');
-            const namespace = username.toLowerCase();
+            const namespace = document.getElementById('namespace').value;
 
             const data = {
                 gitlabUrl: document.getElementById('gitlabUrl').value,
@@ -172,6 +186,10 @@
                 });
                 const result = await response.json();
                 displayResult(result, response.ok);
+                if (response.ok) {
+                    // Recharger les releases après un déploiement réussi
+                    await loadReleasesForNamespace();
+                }
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
@@ -184,8 +202,10 @@
             const ns = document.getElementById('namespace').value;
             const checkSelect = document.getElementById('checkReleaseName');
             const deleteSelect = document.getElementById('deleteReleaseName');
+            const terminalSelect = document.getElementById('terminalReleaseName');
             checkSelect.innerHTML = '';
             deleteSelect.innerHTML = '';
+            terminalSelect.innerHTML = '';
             try {
                 const response = await fetch(`/releases?namespace=${encodeURIComponent(ns)}`);
                 const data = await response.json();
@@ -199,6 +219,10 @@
                         opt2.value = r.name;
                         opt2.textContent = r.name;
                         deleteSelect.appendChild(opt2);
+                        const opt3 = document.createElement('option');
+                        opt3.value = r.name;
+                        opt3.textContent = r.name;
+                        terminalSelect.appendChild(opt3);
                     });
                 } else {
                     const opt = document.createElement('option');
@@ -206,6 +230,7 @@
                     opt.textContent = 'Aucune release trouvée';
                     checkSelect.appendChild(opt);
                     deleteSelect.appendChild(opt.cloneNode(true));
+                    terminalSelect.appendChild(opt.cloneNode(true));
                 }
             } catch (e) {
                 const opt = document.createElement('option');
@@ -213,6 +238,7 @@
                 opt.textContent = 'Erreur lors du chargement';
                 checkSelect.appendChild(opt);
                 deleteSelect.appendChild(opt.cloneNode(true));
+                terminalSelect.appendChild(opt.cloneNode(true));
             }
         }
 
@@ -223,8 +249,7 @@
             isProcessing = true;
             setLoading('checkButton', 'checkLoading', true);
 
-            const username = localStorage.getItem('username');
-            const namespace = username.toLowerCase();
+
             const releaseName = document.getElementById('checkReleaseName').value;
 
             const namespace = document.getElementById('namespace').value;
@@ -278,6 +303,45 @@
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = JSON.stringify(result, null, 2);
             resultDiv.className = `bg-white rounded-lg shadow-lg p-6 font-mono text-sm ${success ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        // Terminal xterm.js et WebSocket
+        let term, ws;
+        function openTerminal() {
+            const releaseName = document.getElementById('terminalReleaseName').value;
+            const namespace = document.getElementById('namespace').value;
+            if (!releaseName || !namespace) {
+                alert('Sélectionnez une release et un namespace');
+                return;
+            }
+            if (term) {
+                term.dispose();
+            }
+            term = new Terminal({
+                theme: { background: '#1a1a1a' },
+                fontSize: 14,
+                cursorBlink: true
+            });
+            term.open(document.getElementById('terminal'));
+            term.write('Connexion au pod...\r\n');
+            if (ws) ws.close();
+            ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(releaseName)}`);
+            ws.onopen = () => {
+                term.write('Terminal prêt.\r\n');
+                term.focus();
+            };
+            ws.onmessage = (event) => {
+                term.write(event.data);
+            };
+            ws.onclose = () => {
+                term.write('\r\n[Connexion fermée]');
+            };
+            ws.onerror = (e) => {
+                term.write('\r\n[Erreur de connexion]');
+            };
+            term.onData(data => {
+                if (ws && ws.readyState === 1) ws.send(data);
+            });
         }
     </script>
 </body>

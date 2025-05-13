@@ -33,29 +33,14 @@ router.get('/releases', async (req, res) => {
     }
 
     try {
+        // Définir KUBECONFIG avant d'exécuter helm
+        process.env.KUBECONFIG = '/etc/rancher/k3s/k3s.yaml';
         const output = await execCommand(`helm list -n ${namespace} -o json`);
         const releases = JSON.parse(output);
         res.json(releases);
     } catch (err) {
         res.status(500).json({ error: 'Erreur lors de la récupération des releases', details: err.toString() });
-
-
-    if (row) {
-      return res.status(400).json({ message: 'Cet email est déjà utilisé' });
     }
-
-    // Ajouter le nouvel utilisateur
-    db.run(
-      'INSERT INTO users (email, password) VALUES (?, ?)',
-      [email, password],
-      function(err) {
-        if (err) {
-          return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
-        }
-        res.status(201).json({ message: 'Inscription réussie' });
-      }
-    );
-  });
 });
 
 // Route pour la connexion
@@ -99,5 +84,5 @@ router.post('/addUser', (req, res) => {
       return res.status(500).send(err.message);
     }
 });
-
-module.exports = router; 
+});
+module.exports = router;
