@@ -29,6 +29,10 @@ Cette partie détaille la création d’une **clé bootable** avec une image Deb
 [📄 Consulter le guide de création de clé bootable](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/build_os_bootable.md)
 
 ---
+## le boot
+
+Cette partie détaille les paramètres à donner aux pc lors de leur boot.
+[📄 Consulter le guide du boot](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/boot.md)
 
 ## Monitoring
 

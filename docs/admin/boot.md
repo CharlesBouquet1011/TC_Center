@@ -10,3 +10,5 @@ Actuellement, il faut attendre un peu au boot pour que la config longhorn foncti
 
 **Si vous relancez un node agent**: Supprimez le node correspondant dans le node master avec `kubectl delete node nodeXX`
 Lorsque vous relancez un node, il regénère une clé SSH, pour vous y connecter de nouveau, il faudra supprimer l'ancienne clé ssh de votre pc avec ssh-keygen -R IP.
+
+Veiller à garder la configuration des nodes master/agent entre chaque reboot, sinon longhorn peut ne pas être content.

@@ -39,13 +39,6 @@
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Gestionnaire d'Applications Kubernetes</h1>
 
-        <!-- Zone unique pour le namespace -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8 flex items-center space-x-4">
-            <label for="namespace" class="block text-sm font-medium text-gray-700">Namespace :</label>
-            <input type="text" id="namespace" value="client-d"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 max-w-xs">
-        </div>
-
         <!-- Section Déploiement -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Déployer une Application</h2>
@@ -108,7 +101,7 @@
         </div>
 
         <!-- Zone de résultat -->
-        <div id="result" class="bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
+        <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
 
     <script>
@@ -119,18 +112,22 @@
         });
 
         function checkAuthStatus() {
-            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-            const username = localStorage.getItem('username');
-            if (!isAuthenticated || !username) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (!user || !user.username) {
+                // Rediriger vers la page de connexion si non authentifié
                 window.location.href = 'login.html';
                 return;
             }
-            document.getElementById('username').textContent = username;
+
+            // Afficher le nom d'utilisateur
+            document.getElementById('username').textContent = user.username;
         }
 
         function logout() {
-            localStorage.removeItem('isAuthenticated');
-            localStorage.removeItem('username');
+            // Supprimer toutes les données de session
+            localStorage.clear();
+            // Rediriger vers la page d'accueil
             window.location.href = 'index.html';
         }
 
@@ -152,8 +149,8 @@
             isProcessing = true;
             setLoading('deployButton', 'deployLoading', true);
 
-            const username = localStorage.getItem('username');
-            const namespace = username.toLowerCase();
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
 
             const data = {
                 gitlabUrl: document.getElementById('gitlabUrl').value,
@@ -172,6 +169,10 @@
                 });
                 const result = await response.json();
                 displayResult(result, response.ok);
+                if (response.ok) {
+                    // Recharger la liste des releases après un déploiement réussi
+                    loadReleasesForNamespace();
+                }
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
@@ -181,13 +182,14 @@
         }
 
         async function loadReleasesForNamespace() {
-            const ns = document.getElementById('namespace').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
             const checkSelect = document.getElementById('checkReleaseName');
             const deleteSelect = document.getElementById('deleteReleaseName');
             checkSelect.innerHTML = '';
             deleteSelect.innerHTML = '';
             try {
-                const response = await fetch(`/releases?namespace=${encodeURIComponent(ns)}`);
+                const response = await fetch(`/releases?namespace=${encodeURIComponent(namespace)}`);
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
@@ -216,18 +218,14 @@
             }
         }
 
-        document.getElementById('namespace').addEventListener('change', loadReleasesForNamespace);
-
         async function checkPorts() {
             if (isProcessing) return;
             isProcessing = true;
             setLoading('checkButton', 'checkLoading', true);
 
-            const username = localStorage.getItem('username');
-            const namespace = username.toLowerCase();
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
             const releaseName = document.getElementById('checkReleaseName').value;
-
-            const namespace = document.getElementById('namespace').value;
 
             try {
                 const response = await fetch(`/ports?releaseName=${releaseName}&namespace=${namespace}`);
@@ -246,14 +244,13 @@
             isProcessing = true;
             setLoading('deleteButton', 'deleteLoading', true);
 
-            const username = localStorage.getItem('username');
-            const namespace = username.toLowerCase();
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
             const releaseName = document.getElementById('deleteReleaseName').value;
 
             const data = {
-                releaseName: document.getElementById('deleteReleaseName').value,
-                namespace: document.getElementById('namespace').value
-
+                releaseName: releaseName,
+                namespace: namespace
             };
 
             try {
@@ -278,6 +275,7 @@
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = JSON.stringify(result, null, 2);
             resultDiv.className = `bg-white rounded-lg shadow-lg p-6 font-mono text-sm ${success ? 'text-green-600' : 'text-red-600'}`;
+            resultDiv.classList.remove('hidden');
         }
     </script>
 </body>
