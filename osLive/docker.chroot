@@ -34,3 +34,32 @@ fi
 sudo systemctl restart docker
 
 echo "Docker installation complete and configured to use /mnt/k3sVolume/docker as data-root."
+
+# Configure Podman
+sudo apt-get install -y podman fuse-overlayfs
+
+sudo mkdir -p /mnt/k3sVolume/podman
+sudo mkdir -p /etc/containers
+
+# Write the Podman storage configuration
+sudo tee /etc/containers/storage.conf > /dev/null <<EOF
+[storage]
+  driver = "overlay"
+  graphRoot = "/mnt/k3sVolume/podman"
+  runRoot = "/run/containers"
+[storage.options]
+  mount_program = "/usr/bin/fuse-overlayfs"
+EOF
+
+# Migrate existing Podman data if present
+if [ -d /var/lib/containers ]; then
+  echo "Moving existing Podman data to /mnt/k3sVolume/podman..."
+  sudo systemctl stop podman.socket podman.service
+  sudo rsync -aP /var/lib/containers/ /mnt/k3sVolume/podman/
+  sudo rm -rf /var/lib/containers
+fi
+
+echo "Podman configured to use /mnt/k3sVolume/podman"
+
+
+

@@ -40,7 +40,7 @@ elif [ "$ROLE" = "agent" ]; then
     INSTALL_K3S_SKIP_ENABLE=true \
     K3S_URL="https://$MASTER_IP:6443" \
     K3S_TOKEN=TC-Center \
-    INSTALL_K3S_EXEC="agent --snapshotter=fuse-overlayfs" \
+    INSTALL_K3S_EXEC="agent --snapshotter=fuse-overlayfs --data-dir /mnt/k3sVolume/k3s"  \
     ./install-k3s.sh
     #configuration du repo k3s
     sudo systemctl start k3s-agent
@@ -56,16 +56,53 @@ rm ./install-k3s.sh
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 if [ "$ROLE" = "master" ]; then
     echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/user/.bashrc
+    #config trafik:
+    helm repo add traefik https://traefik.github.io/charts
+    helm repo update
+    helm upgrade --install traefik traefik/traefik \
+    --namespace kube-system \
+    --create-namespace \
+    --set crds.enabled=true
+    
+    ./grafana.sh
     fi
 
 echo "Helm est installé avec succès."
 
-#config trafik:
-helm repo add traefik https://traefik.github.io/charts
-helm repo update
-helm upgrade --install traefik traefik/traefik \
-  --namespace kube-system \
-  --create-namespace \
-  --set crds.enabled=true
-  
-./grafana.sh
+#longhorn
+sudo rm /etc/initramfs/post-update.d/z50-raspi-firmware
+sudo dpkg --configure -a
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
+sudo mkdir -p /mnt/k3sVolume/longhorn
+if [ -d /mnt/k3sVolume/longhorn ]; then
+    sudo mount --bind /mnt/k3sVolume/longhorn /var/lib/longhorn
+else
+    echo "Erreur : le dossier /mnt/k3sVolume/longhorn n'existe pas."
+    exit 1
+fi
+kubectl -n longhorn-system delete pod -l app=longhorn-manager
+
+
+#config podman:
+
+cat > home/user/.config/containers/registries.conf <<EOF
+unqualified-search-registries = ["docker.io"]
+
+[[registry]]
+prefix = "docker.io"
+location = "docker.io"
+
+[[registry]]
+prefix = "134.214.202.221:5000"
+insecure = true
+location = "134.214.202.221:5000"
+EOF
+
+cat > /home/user/.config/containers/storage.conf <<EOF
+[storage]
+  driver = "overlay"
+  graphRoot = "${HOME}/.local/share/containers/storage"
+  runRoot = "${XDG_RUNTIME_DIR}/containers"
+[storage.options]
+  mount_program = "/usr/bin/fuse-overlayfs"
+EOF
