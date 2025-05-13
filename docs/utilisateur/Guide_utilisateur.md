@@ -16,8 +16,8 @@ Cela inclut :
 - Les configurations (valeurs par défaut, variables personnalisables)
 - La structure standard d’un chart Helm (`Chart.yaml`, `values.yaml`, `templates/`, etc.)
 
-> 📚 Consultez la [documentation officielle de Helm](https://helm.sh/docs/chart_template_guide/) pour plus de détails.
-> ℹ️ Si vous avez besoin de plus d'aide ou d'un exemple concret, référez-vous au guide **Guid_helm**.
+
+> ℹ️ Si vous avez besoin de plus d'aide ou d'un exemple concret, référez-vous au guide [Guide_helm](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/utilisateur/Guide_helm.md).
 
 ## 3. Accéder à la plateforme TC Center
 

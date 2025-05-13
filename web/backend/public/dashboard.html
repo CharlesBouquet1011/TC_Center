@@ -39,6 +39,13 @@
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Gestionnaire d'Applications Kubernetes</h1>
 
+        <!-- Zone unique pour le namespace -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8 flex items-center space-x-4">
+            <label for="namespace" class="block text-sm font-medium text-gray-700">Namespace :</label>
+            <input type="text" id="namespace" value="client-d"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 max-w-xs">
+        </div>
+
         <!-- Section Déploiement -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Déployer une Application</h2>
@@ -72,8 +79,8 @@
             <div class="space-y-4">
                 <div>
                     <label for="checkReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release:</label>
-                    <input type="text" id="checkReleaseName" value="test-nginx"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+
+                    <select id="checkReleaseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
                 </div>
                 <button id="checkButton" onclick="checkPorts()"
                     class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
@@ -89,8 +96,8 @@
             <div class="space-y-4">
                 <div>
                     <label for="deleteReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release:</label>
-                    <input type="text" id="deleteReleaseName" value="test-nginx"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+
+                    <select id="deleteReleaseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
                 </div>
                 <button id="deleteButton" onclick="deleteApp()"
                     class="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
@@ -108,19 +115,16 @@
         // Vérifier si l'utilisateur est connecté au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
             checkAuthStatus();
+            loadReleasesForNamespace();
         });
 
         function checkAuthStatus() {
             const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
             const username = localStorage.getItem('username');
-            
             if (!isAuthenticated || !username) {
-                // Rediriger vers la page de connexion si non authentifié
                 window.location.href = 'login.html';
                 return;
             }
-
-            // Afficher le nom d'utilisateur
             document.getElementById('username').textContent = username;
         }
 
@@ -176,6 +180,44 @@
             }
         }
 
+        async function loadReleasesForNamespace() {
+            const ns = document.getElementById('namespace').value;
+            const checkSelect = document.getElementById('checkReleaseName');
+            const deleteSelect = document.getElementById('deleteReleaseName');
+            checkSelect.innerHTML = '';
+            deleteSelect.innerHTML = '';
+            try {
+                const response = await fetch(`/releases?namespace=${encodeURIComponent(ns)}`);
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(r => {
+                        const opt1 = document.createElement('option');
+                        opt1.value = r.name;
+                        opt1.textContent = r.name;
+                        checkSelect.appendChild(opt1);
+                        const opt2 = document.createElement('option');
+                        opt2.value = r.name;
+                        opt2.textContent = r.name;
+                        deleteSelect.appendChild(opt2);
+                    });
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Aucune release trouvée';
+                    checkSelect.appendChild(opt);
+                    deleteSelect.appendChild(opt.cloneNode(true));
+                }
+            } catch (e) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Erreur lors du chargement';
+                checkSelect.appendChild(opt);
+                deleteSelect.appendChild(opt.cloneNode(true));
+            }
+        }
+
+        document.getElementById('namespace').addEventListener('change', loadReleasesForNamespace);
+
         async function checkPorts() {
             if (isProcessing) return;
             isProcessing = true;
@@ -184,6 +226,8 @@
             const username = localStorage.getItem('username');
             const namespace = username.toLowerCase();
             const releaseName = document.getElementById('checkReleaseName').value;
+
+            const namespace = document.getElementById('namespace').value;
 
             try {
                 const response = await fetch(`/ports?releaseName=${releaseName}&namespace=${namespace}`);
@@ -207,8 +251,9 @@
             const releaseName = document.getElementById('deleteReleaseName').value;
 
             const data = {
-                releaseName: releaseName,
-                namespace: namespace
+                releaseName: document.getElementById('deleteReleaseName').value,
+                namespace: document.getElementById('namespace').value
+
             };
 
             try {

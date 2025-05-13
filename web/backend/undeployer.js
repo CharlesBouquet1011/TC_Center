@@ -4,19 +4,7 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-
-// Fonction pour exécuter des commandes shell
-function execCommand(command) {
-    return new Promise((resolve, reject) => {
-        exec(command, { maxBuffer: 1024 * 500 }, (error, stdout, stderr) => {
-            if (error) {
-                reject(stderr || stdout || error.message);
-            } else {
-                resolve(stdout);
-            }
-        });
-    });
-}
+const { execCommand } = require('./k3sExec');
 
 // Route pour la suppression d'une application
 router.delete('/', async (req, res) => {
