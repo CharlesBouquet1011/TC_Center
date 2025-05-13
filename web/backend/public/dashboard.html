@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionnaire d'Applications Kubernetes</title>
+    <title>Tableau de bord - TC Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -18,7 +18,7 @@
         <nav class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <a href="index.html" class="flex items-center space-x-2">
+                    <a href="dashboard.html" class="flex items-center space-x-2">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
@@ -26,83 +26,17 @@
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="#features" class="text-gray-600 hover:text-blue-600">Fonctionnalités</a>
-                    <div id="appManagement" class="hidden">
-                        <a href="#deploy" class="text-gray-600 hover:text-blue-600">Déploiement</a>
-                        <a href="#undeploy" class="text-gray-600 hover:text-blue-600">Suppression</a>
+                    <div id="userInfo">
+                        <span class="font-semibold text-blue-600 drop-shadow-sm">Bonjour <span id="username" class="font-semibold text-blue-600 drop-shadow-sm">Test User</span></span>
                     </div>
-                    <div id="userInfo" class="hidden">
-                        <span class="text-gray-600">Bonjour <span id="username" class="font-semibold"></span></span>
-                    </div>
-                    <a href="login.html" id="loginLink" class="text-gray-600 hover:text-blue-600">Connexion</a>
-                    <button id="logoutButton" onclick="logout()" class="hidden text-gray-600 hover:text-blue-600">Déconnexion</button>
+                    <button id="logoutButton" onclick="logout()" class="text-gray-600 hover:text-blue-600">Déconnexion</button>
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- Hero Section -->
-    <section class="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div class="container mx-auto px-4 text-center">
-            <h2 class="text-5xl font-bold mb-6">Votre Datacenter Intelligent</h2>
-            <p class="text-xl mb-8 max-w-3xl mx-auto">
-                Simplifiez le déploiement et la gestion de vos applications avec notre plateforme
-                intégrée Kubernetes et Docker.
-            </p>
-            <div class="flex justify-center space-x-4">
-                <a href="login.html" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                    Commencer
-                </a>
-                <a href="#features" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
-                    En savoir plus
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="py-16">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">Fonctionnalités Principales</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Déploiement Automatisé</h3>
-                    <p class="text-gray-600">
-                        Déployez vos applications Docker sur Kubernetes en quelques clics avec notre interface intuitive.
-                    </p>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Monitoring en Temps Réel</h3>
-                    <p class="text-gray-600">
-                        Surveillez vos applications et ressources en temps réel avec des tableaux de bord détaillés.
-                    </p>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Sécurité Avancée</h3>
-                    <p class="text-gray-600">
-                        Bénéficiez d'une infrastructure sécurisée avec des quotas et des limites de ressources.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div id="appManagement" class="container mx-auto px-4 py-8 max-w-4xl hidden">
+    <!-- Dashboard Content -->
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Gestionnaire d'Applications Kubernetes</h1>
 
         <!-- Section Déploiement -->
@@ -160,7 +94,7 @@
         </div>
 
         <!-- Section Suppression -->
-        <div id="undeploy" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Supprimer une Application</h2>
             <div class="space-y-4">
                 <div>
@@ -186,6 +120,31 @@
     </div>
 
     <script>
+        // Vérifier si l'utilisateur est connecté au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+
+        function checkAuthStatus() {
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+            const username = localStorage.getItem('username');
+            
+            if (!isAuthenticated || !username) {
+                // Rediriger vers la page de connexion si non authentifié
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Afficher le nom d'utilisateur
+            document.getElementById('username').textContent = username;
+        }
+
+        function logout() {
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('username');
+            window.location.href = 'index.html';
+        }
+
         let isProcessing = false;
 
         function setLoading(buttonId, loadingId, isLoading) {
@@ -281,33 +240,6 @@
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = JSON.stringify(result, null, 2);
             resultDiv.className = `bg-white rounded-lg shadow-lg p-6 font-mono text-sm ${success ? 'text-green-600' : 'text-red-600'}`;
-        }
-
-        // Vérifier si l'utilisateur est connecté au chargement de la page
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthStatus();
-        });
-
-        async function checkAuthStatus() {
-            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-            const username = localStorage.getItem('username');
-
-            if (isAuthenticated) {
-                window.location.href = 'dashboard.html';
-                return;
-            }
-
-            document.getElementById('loginButton').classList.remove('hidden');
-            document.getElementById('registerButton').classList.remove('hidden');
-            document.getElementById('userInfo').classList.add('hidden');
-            document.getElementById('logoutButton').classList.add('hidden');
-            document.getElementById('appManagement').classList.add('hidden');
-        }
-
-        async function logout() {
-            localStorage.removeItem('isAuthenticated');
-            localStorage.removeItem('username');
-            window.location.reload();
         }
     </script>
 </body>

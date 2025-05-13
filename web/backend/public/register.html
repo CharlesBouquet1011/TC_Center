@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - TC Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <h1 class="text-2xl font-bold text-gray-800">TC Center</h1>
+                    </a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="index.html#features" class="text-gray-600 hover:text-blue-600">Fonctionnalités</a>
+                    <a href="login.html" class="text-gray-600 hover:text-blue-600">Connexion</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Register Section -->
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Créer un compte
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    Rejoignez notre plateforme
+                </p>
+            </div>
+            <form class="mt-8 space-y-6" action="#" method="POST" id="registerForm">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="email" class="sr-only">Adresse email</label>
+                        <input id="email" name="email" type="email" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                            placeholder="Adresse email">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Mot de passe</label>
+                        <input id="password" name="password" type="password" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                            placeholder="Mot de passe">
+                    </div>
+                    <div>
+                        <label for="confirm-password" class="sr-only">Confirmer le mot de passe</label>
+                        <input id="confirm-password" name="confirm-password" type="password" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                            placeholder="Confirmer le mot de passe">
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <input id="terms" name="terms" type="checkbox" required
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="terms" class="ml-2 block text-sm text-gray-900">
+                        J'accepte les <a href="#" class="text-blue-600 hover:text-blue-500">conditions d'utilisation</a>
+                    </label>
+                </div>
+
+                <div>
+                    <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        S'inscrire
+                    </button>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Déjà un compte ? 
+                        <a href="login.html" class="font-medium text-blue-600 hover:text-blue-500">
+                            Se connecter
+                        </a>
+                    </p>
+                </div>
+            </form>
+
+            <div id="errorMessage" class="hidden text-red-600 text-sm text-center"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!email.endsWith('@insa-lyon.fr')) {
+                errorMessage.textContent = 'Veuillez utiliser une adresse email @insa-lyon.fr';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Les mots de passe ne correspondent pas';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Redirection vers la page de connexion après inscription réussie
+                    window.location.href = 'login.html';
+                } else {
+                    errorMessage.textContent = result.message || 'Erreur lors de l\'inscription';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Erreur lors de l\'inscription';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html> 
