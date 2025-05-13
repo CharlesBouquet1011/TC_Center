@@ -17,7 +17,7 @@ Dans le dossier `docs` de ce dépôt Git, vous trouverez deux sections distincte
 - **Section administrateur** : destinée aux personnes intéressées par l’infrastructure elle-même.  
   Elle détaille le matériel utilisé, les outils mis en place, ainsi que les différentes configurations déployées.  
   Cette section s'adresse aux développeurs ou administrateurs souhaitant comprendre le fonctionnement interne de notre datacenter ou en reproduire l’installation.
-  [Guide_admin](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/Commandes.md)
+  [Guide_admin](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/Guide_admin.md)
 
 > 📁 Ce dossier s’adresse à la fois aux utilisateurs finaux de notre service d’hébergement et aux développeurs souhaitant se documenter sur la mise en place d’un datacenter.
 
