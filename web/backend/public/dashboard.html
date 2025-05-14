@@ -115,6 +115,18 @@
             </div>
         </div>
 
+        <!-- Section Logs Pod -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Logs d'un Pod</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="logsReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release (pod) :</label>
+                    <select id="logsReleaseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                </div>
+                <button id="downloadLogsButton" onclick="downloadPodLogs()" class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md">Télécharger les logs</button>
+            </div>
+        </div>
+
         <!-- Zone de résultat -->
         <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
@@ -202,9 +214,11 @@
             const checkSelect = document.getElementById('checkReleaseName');
             const deleteSelect = document.getElementById('deleteReleaseName');
             const terminalSelect = document.getElementById('terminalReleaseName');
+            const logsSelect = document.getElementById('logsReleaseName');
             checkSelect.innerHTML = '';
             deleteSelect.innerHTML = '';
             terminalSelect.innerHTML = '';
+            logsSelect.innerHTML = '';
             try {
                 const response = await fetch(`/releases?namespace=${encodeURIComponent(namespace)}`);
                 const data = await response.json();
@@ -222,6 +236,10 @@
                         opt3.value = r.name;
                         opt3.textContent = r.name;
                         terminalSelect.appendChild(opt3);
+                        const opt4 = document.createElement('option');
+                        opt4.value = r.name;
+                        opt4.textContent = r.name;
+                        logsSelect.appendChild(opt4);
                     });
                 } else {
                     const opt = document.createElement('option');
@@ -230,6 +248,7 @@
                     checkSelect.appendChild(opt);
                     deleteSelect.appendChild(opt.cloneNode(true));
                     terminalSelect.appendChild(opt.cloneNode(true));
+                    logsSelect.appendChild(opt.cloneNode(true));
                 }
             } catch (e) {
                 const opt = document.createElement('option');
@@ -238,6 +257,7 @@
                 checkSelect.appendChild(opt);
                 deleteSelect.appendChild(opt.cloneNode(true));
                 terminalSelect.appendChild(opt.cloneNode(true));
+                logsSelect.appendChild(opt.cloneNode(true));
             }
         }
 
@@ -341,6 +361,37 @@
             term.onData(data => {
                 if (ws && ws.readyState === 1) ws.send(data);
             });
+        }
+
+        function downloadPodLogs() {
+            const releaseName = document.getElementById('logsReleaseName').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            if (!releaseName || !namespace) {
+                alert('Sélectionnez une release');
+                return;
+            }
+            fetch(`/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(releaseName)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
+                    return res.text();
+                })
+                .then(logs => {
+                    const blob = new Blob([logs], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `logs_${namespace}_${releaseName}.log`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                })
+                .catch(err => {
+                    alert('Erreur : ' + err.message);
+                });
         }
     </script>
 </body>
