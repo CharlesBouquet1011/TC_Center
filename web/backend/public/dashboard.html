@@ -252,7 +252,7 @@
             podSelector.innerHTML = '';
             
             try {
-                const response = await fetch(`/releases?namespace=${encodeURIComponent(namespace)}`);
+                const response = await fetch(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
@@ -409,7 +409,7 @@
                 return;
             }
             
-            fetch(`/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
+            fetch(`/pods/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
                     return res.text();
@@ -442,7 +442,7 @@
                 return;
             }
             
-            fetch(`/describe-k3s?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
+            fetch(`/k3s/describe?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération de la description');
                     return res.text();
@@ -479,7 +479,7 @@
             const namespace = user.username.toLowerCase();
             
             try {
-                const response = await fetch(`/pod-stats?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`);
+                const response = await fetch(`/pods/stats?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`);
                 
                 if (!response.ok) {
                     throw new Error('Erreur lors de la récupération des stats du pod');
