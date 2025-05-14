@@ -48,11 +48,12 @@ Cette partie fournit un guide pour installer et configurer ces outils via Helm.
 ---
 
 ## Solution de stockage distribué
-Longhorn permet :
+**Longhorn** permet :
 
 - La persistance des volumes même en cas de redémarrage ou déplacement de pods
 - La réplication des données sur plusieurs nœuds
 - La gestion via une interface web ou des CRD Kubernetes
+- la gestion des volumes sur les noeuds
 
 [📄 Voir la configuration Longhorn](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/longhorn.md)
 

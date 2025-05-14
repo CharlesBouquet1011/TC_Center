@@ -11,7 +11,7 @@
 À configurer si vous souhaitez pouvoir vous connecter à distance et ainsi gérer votre datacenter sans être physiquement devant les machines.
 
 ### Ajout de votre clé SSH sur la machine 
-tuto
+cf [build_os_bootable.md](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/build_os_bootable.md)
 
 ### Connexion simple
 

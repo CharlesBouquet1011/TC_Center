@@ -8,7 +8,7 @@ Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fon
 Pour pouvoir accéder a votre code il faut qu'il soit déposé sur github ou sur gitlab (dans un dépôt public ou privé selon votre préférence).
 
 Une fois votre application testée et stable, vous devez la **conteneuriser**.  
-Pour cela, utilisez **Docker** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
+Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
 
 ## 2. Créer un Helm Chart
 
