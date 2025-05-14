@@ -161,6 +161,63 @@
             </div>
         </div>
 
+        <!-- Section Ressources Kubernetes -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Ressources Kubernetes</h2>
+            
+            <div class="space-y-6">
+                <!-- Sélecteur de type de ressource -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="resourceType" class="block text-sm font-medium text-gray-700">Type de ressource:</label>
+                        <select id="resourceType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="pods">Pods</option>
+                            <option value="services">Services</option>
+                            <option value="deployments">Deployments</option>
+                            <option value="statefulsets">StatefulSets</option>
+                            <option value="configmaps">ConfigMaps</option>
+                            <option value="secrets">Secrets</option>
+                            <option value="persistentvolumeclaims">PersistentVolumeClaims</option>
+                            <option value="ingresses">Ingresses</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadK8sResources()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md w-full">
+                            Charger les ressources
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tableau des ressources -->
+                <div id="resourcesContainer" class="overflow-x-auto hidden">
+                    <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-2 px-4 text-left text-sm font-semibold text-gray-700 border-b">Nom</th>
+                                <th class="py-2 px-4 text-left text-sm font-semibold text-gray-700 border-b">Namespace</th>
+                                <th class="py-2 px-4 text-left text-sm font-semibold text-gray-700 border-b">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resourcesList">
+                            <!-- Les ressources seront ajoutées ici dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Message d'aucune ressource -->
+                <div id="noResourcesMessage" class="hidden text-center py-4 text-gray-500">
+                    Aucune ressource trouvée
+                </div>
+                
+                <!-- Loading spinner -->
+                <div id="resourcesLoading" class="hidden">
+                    <div class="flex justify-center items-center py-4">
+                        <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Zone de résultat -->
         <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
@@ -529,6 +586,99 @@
                 console.error('Erreur lors du chargement des stats:', err);
                 statsContainer.classList.add('hidden');
             }
+        }
+
+        // Fonction pour charger les ressources Kubernetes
+        async function loadK8sResources() {
+            const resourceType = document.getElementById('resourceType').value;
+            const resourcesContainer = document.getElementById('resourcesContainer');
+            const noResourcesMessage = document.getElementById('noResourcesMessage');
+            const resourcesLoading = document.getElementById('resourcesLoading');
+            const resourcesList = document.getElementById('resourcesList');
+            
+            if (!resourceType) {
+                alert('Sélectionnez un type de ressource');
+                return;
+            }
+            
+            // Afficher le spinner de chargement
+            resourcesContainer.classList.add('hidden');
+            noResourcesMessage.classList.add('hidden');
+            resourcesLoading.classList.remove('hidden');
+            
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            try {
+                const response = await fetch(`/k3s/resources?resourceType=${encodeURIComponent(resourceType)}&namespace=${encodeURIComponent(namespace)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur lors de la récupération des ressources: ${response.status}`);
+                }
+                
+                const resources = await response.json();
+                
+                // Masquer le spinner de chargement
+                resourcesLoading.classList.add('hidden');
+                
+                if (Array.isArray(resources) && resources.length > 0) {
+                    // Vider et remplir le tableau des ressources
+                    resourcesList.innerHTML = '';
+                    
+                    resources.forEach(resource => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        
+                        row.innerHTML = `
+                            <td class="py-2 px-4 border-b">${resource.name}</td>
+                            <td class="py-2 px-4 border-b">${resource.namespace}</td>
+                            <td class="py-2 px-4 border-b">
+                                <button 
+                                    onclick="viewResourceDetails('${resourceType}', '${resource.name}')" 
+                                    class="text-xs py-1 px-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded">
+                                    Détails
+                                </button>
+                            </td>
+                        `;
+                        
+                        resourcesList.appendChild(row);
+                    });
+                    
+                    resourcesContainer.classList.remove('hidden');
+                } else {
+                    noResourcesMessage.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Erreur lors du chargement des ressources:', err);
+                resourcesLoading.classList.add('hidden');
+                noResourcesMessage.classList.remove('hidden');
+                noResourcesMessage.textContent = `Erreur: ${err.message}`;
+            }
+        }
+        
+        // Fonction pour voir les détails d'une ressource
+        function viewResourceDetails(resourceType, resourceName) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            fetch(`/k3s/describe?resourceType=${encodeURIComponent(resourceType)}&resourceName=${encodeURIComponent(resourceName)}&namespace=${encodeURIComponent(namespace)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Erreur lors de la récupération des détails');
+                    return res.text();
+                })
+                .then(describe => {
+                    // Afficher les détails dans la zone de résultat
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.textContent = describe;
+                    resultDiv.className = 'bg-white rounded-lg shadow-lg p-6 font-mono text-sm text-gray-800 whitespace-pre-wrap';
+                    resultDiv.classList.remove('hidden');
+                    
+                    // Faire défiler jusqu'à la zone de résultat
+                    resultDiv.scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(err => {
+                    alert('Erreur : ' + err.message);
+                });
         }
     </script>
 </body>
