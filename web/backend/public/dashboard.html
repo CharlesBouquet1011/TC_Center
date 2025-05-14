@@ -290,10 +290,19 @@
             podSelector.innerHTML = '';
             
             try {
+                console.log(`Chargement des releases pour namespace: ${namespace}`);
                 const response = await fetch(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log(`Releases trouvées: ${data.length}`);
+                
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
+                        console.log(`Release: ${r.name}`);
                         const opt1 = document.createElement('option');
                         opt1.value = r.name;
                         opt1.textContent = r.name;
@@ -305,8 +314,8 @@
                         podSelector.appendChild(opt2);
                     });
                     
-                    // Charger les stats du premier pod automatiquement
-                    loadPodStats();
+                    // Ensuite, charger les pods disponibles dans le namespace
+                    loadPodsForNamespace(namespace, podSelector);
                 } else {
                     const opt = document.createElement('option');
                     opt.value = '';
@@ -315,11 +324,63 @@
                     podSelector.appendChild(opt.cloneNode(true));
                 }
             } catch (e) {
+                console.error('Erreur lors du chargement des releases:', e);
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = 'Erreur lors du chargement';
                 deleteSelect.appendChild(opt);
                 podSelector.appendChild(opt.cloneNode(true));
+            }
+        }
+
+        async function loadPodsForNamespace(namespace, podSelector) {
+            try {
+                console.log(`Chargement des pods pour namespace: ${namespace}`);
+                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+                }
+                
+                const pods = await response.json();
+                console.log(`Pods trouvés: ${pods.length}`);
+                
+                // Vider d'abord le sélecteur pour éviter les doublons
+                podSelector.innerHTML = '';
+                
+                if (pods.length > 0) {
+                    // Ajouter une option "Sélectionner un pod"
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.textContent = '-- Sélectionner un pod --';
+                    podSelector.appendChild(defaultOpt);
+                    
+                    // Ajouter tous les pods trouvés
+                    pods.forEach(pod => {
+                        console.log(`Pod: ${pod.name} (${pod.status})`);
+                        const opt = document.createElement('option');
+                        opt.value = pod.name;
+                        opt.textContent = `${pod.name} (${pod.status})`;
+                        podSelector.appendChild(opt);
+                    });
+                    
+                    // Charger automatiquement le premier pod s'il y en a
+                    if (pods.length > 0) {
+                        podSelector.selectedIndex = 1; // Sélectionner le premier pod (index 1 car 0 est l'option par défaut)
+                        loadPodStats();
+                    }
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Aucun pod trouvé';
+                    podSelector.appendChild(opt);
+                }
+            } catch (err) {
+                console.error('Erreur lors du chargement des pods:', err);
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Erreur lors du chargement';
+                podSelector.appendChild(opt);
             }
         }
 
@@ -517,120 +578,161 @@
             const namespace = user.username.toLowerCase();
             
             try {
+                console.log(`Chargement des stats pour pod: ${podName} dans namespace: ${namespace}`);
+                
                 // Charger les infos détaillées du pod depuis la nouvelle API
                 const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
                 
                 if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des données du pod');
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
                 }
                 
                 const podsData = await response.json();
+                console.log('Pods disponibles:', podsData.map(p => p.name).join(', '));
+                
+                // Vérifier si le pod existe dans les données
                 const podData = podsData.find(p => p.name === podName);
                 
                 if (!podData) {
-                    throw new Error(`Pod ${podName} non trouvé`);
-                }
-                
-                // Mettre à jour les informations générales
-                document.getElementById('podStatus').textContent = podData.status;
-                document.getElementById('podReady').textContent = podData.ready || 'N/A';
-                document.getElementById('podRestarts').textContent = podData.restarts || '0';
-                document.getElementById('podNode').textContent = podData.node || 'N/A';
-                
-                // Calculer l'âge relatif
-                if (podData.startTime) {
-                    const age = new Date(podData.startTime);
-                    const now = new Date();
-                    const diffTime = Math.abs(now - age);
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    let ageText = '';
-                    
-                    if (diffDays > 0) {
-                        ageText = `${diffDays}j ${diffHours}h`;
+                    // Essayer un match partiel au cas où
+                    const partialMatch = podsData.find(p => p.name.includes(podName) || podName.includes(p.name));
+                    if (partialMatch) {
+                        console.log(`Pod exact non trouvé, mais match partiel trouvé: ${partialMatch.name}`);
+                        // Utiliser le match partiel
+                        loadPodDetails(partialMatch, statsContainer);
                     } else {
-                        ageText = `${diffHours}h`;
+                        console.error(`Pod ${podName} non trouvé dans les données:`, podsData);
+                        // Si aucun pod n'est trouvé mais que des pods existent, utiliser le premier
+                        if (podsData.length > 0) {
+                            console.log(`Utilisation du premier pod disponible: ${podsData[0].name}`);
+                            loadPodDetails(podsData[0], statsContainer);
+                            
+                            // Mettre à jour le sélecteur pour refléter le pod utilisé
+                            const options = document.getElementById('podSelector').options;
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === podsData[0].name) {
+                                    document.getElementById('podSelector').selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        } else {
+                            throw new Error(`Aucun pod trouvé dans le namespace ${namespace}`);
+                        }
                     }
-                    
-                    document.getElementById('podAge').textContent = ageText;
                 } else {
-                    document.getElementById('podAge').textContent = 'Inconnu';
+                    // Pod trouvé, charger les détails
+                    loadPodDetails(podData, statsContainer);
                 }
-                
-                // Colorer le statut
-                const statusElem = document.getElementById('podStatus');
-                if (podData.status === 'Running') {
-                    statusElem.className = 'text-sm font-semibold mt-1 text-green-600';
-                } else if (podData.status === 'Pending') {
-                    statusElem.className = 'text-sm font-semibold mt-1 text-yellow-600';
-                } else {
-                    statusElem.className = 'text-sm font-semibold mt-1 text-red-600';
-                }
-                
-                // Mettre à jour les ressources directement ici
-                // CPU
-                const cpuValue = podData.cpu;
-                document.getElementById('cpuValueText').textContent = cpuValue;
-                
-                // Estimer le pourcentage pour la barre de CPU
-                let cpuPercentage = 0;
-                if (cpuValue.endsWith('m')) {
-                    // Millicores: 1000m = 1 core
-                    const millicores = parseInt(cpuValue.slice(0, -1));
-                    // Estimer 1 core comme 100% (ajuster selon vos besoins)
-                    cpuPercentage = Math.min(Math.round(millicores / 10), 100);
-                } else {
-                    // Cores directs
-                    const cores = parseFloat(cpuValue);
-                    cpuPercentage = Math.min(Math.round(cores * 100), 100);
-                }
-                
-                document.getElementById('cpuBar').style.width = `${cpuPercentage}%`;
-                
-                // Mémoire
-                const memValue = podData.memory;
-                document.getElementById('memoryValueText').textContent = memValue;
-                
-                // Estimer le pourcentage pour la barre de mémoire
-                let memPercentage = 0;
-                if (memValue.endsWith('Mi')) {
-                    // Mébibytes
-                    const mi = parseInt(memValue.slice(0, -2));
-                    // Estimer 1Gi comme 100% (ajuster selon vos besoins)
-                    memPercentage = Math.min(Math.round(mi / 10), 100);
-                } else if (memValue.endsWith('Gi')) {
-                    // Gibibytes
-                    const gi = parseFloat(memValue.slice(0, -2));
-                    memPercentage = Math.min(Math.round(gi * 100), 100);
-                }
-                
-                document.getElementById('memoryBar').style.width = `${memPercentage}%`;
-                
-                // Stockage
-                const storageValue = podData.storage;
-                document.getElementById('storageValueText').textContent = storageValue;
-                
-                // Estimer le pourcentage pour la barre de stockage
-                let storagePercentage = 0;
-                if (storageValue !== 'N/A') {
-                    if (storageValue.endsWith('Gi')) {
-                        const gi = parseFloat(storageValue.slice(0, -2));
-                        storagePercentage = Math.min(Math.round(gi * 10), 100);
-                    } else if (storageValue.endsWith('Mi')) {
-                        const mi = parseInt(storageValue.slice(0, -2));
-                        storagePercentage = Math.min(Math.round(mi / 100), 100);
-                    }
-                }
-                
-                document.getElementById('storageBar').style.width = `${storagePercentage}%`;
-                
-                // Afficher le conteneur de stats
-                statsContainer.classList.remove('hidden');
-                
             } catch (err) {
                 console.error('Erreur lors du chargement des stats:', err);
                 statsContainer.classList.add('hidden');
+                // Afficher l'erreur dans l'UI pour aider au débogage
+                const resultDiv = document.getElementById('result');
+                if (resultDiv) {
+                    resultDiv.innerHTML = `Erreur: ${err.message}`;
+                    resultDiv.className = 'bg-white rounded-lg shadow-lg p-6 font-mono text-sm text-red-600';
+                    resultDiv.classList.remove('hidden');
+                }
             }
+        }
+
+        // Fonction séparée pour charger les détails du pod (séparé pour mieux organiser le code)
+        function loadPodDetails(podData, statsContainer) {
+            // Mettre à jour les informations générales
+            document.getElementById('podStatus').textContent = podData.status;
+            document.getElementById('podReady').textContent = podData.ready || 'N/A';
+            document.getElementById('podRestarts').textContent = podData.restarts || '0';
+            document.getElementById('podNode').textContent = podData.node || 'N/A';
+            
+            // Calculer l'âge relatif
+            if (podData.startTime) {
+                const age = new Date(podData.startTime);
+                const now = new Date();
+                const diffTime = Math.abs(now - age);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let ageText = '';
+                
+                if (diffDays > 0) {
+                    ageText = `${diffDays}j ${diffHours}h`;
+                } else {
+                    ageText = `${diffHours}h`;
+                }
+                
+                document.getElementById('podAge').textContent = ageText;
+            } else {
+                document.getElementById('podAge').textContent = 'Inconnu';
+            }
+            
+            // Colorer le statut
+            const statusElem = document.getElementById('podStatus');
+            if (podData.status === 'Running') {
+                statusElem.className = 'text-sm font-semibold mt-1 text-green-600';
+            } else if (podData.status === 'Pending') {
+                statusElem.className = 'text-sm font-semibold mt-1 text-yellow-600';
+            } else {
+                statusElem.className = 'text-sm font-semibold mt-1 text-red-600';
+            }
+            
+            // Mettre à jour les ressources
+            // CPU
+            const cpuValue = podData.cpu || '0m';
+            document.getElementById('cpuValueText').textContent = cpuValue;
+            
+            // Estimer le pourcentage pour la barre de CPU
+            let cpuPercentage = 0;
+            if (cpuValue.endsWith('m')) {
+                // Millicores: 1000m = 1 core
+                const millicores = parseInt(cpuValue.slice(0, -1));
+                // Estimer 1 core comme 100% (ajuster selon vos besoins)
+                cpuPercentage = Math.min(Math.round(millicores / 10), 100);
+            } else {
+                // Cores directs
+                const cores = parseFloat(cpuValue);
+                cpuPercentage = Math.min(Math.round(cores * 100), 100);
+            }
+            
+            document.getElementById('cpuBar').style.width = `${cpuPercentage}%`;
+            
+            // Mémoire
+            const memValue = podData.memory || '0Mi';
+            document.getElementById('memoryValueText').textContent = memValue;
+            
+            // Estimer le pourcentage pour la barre de mémoire
+            let memPercentage = 0;
+            if (memValue.endsWith('Mi')) {
+                // Mébibytes
+                const mi = parseInt(memValue.slice(0, -2));
+                // Estimer 1Gi comme 100% (ajuster selon vos besoins)
+                memPercentage = Math.min(Math.round(mi / 10), 100);
+            } else if (memValue.endsWith('Gi')) {
+                // Gibibytes
+                const gi = parseFloat(memValue.slice(0, -2));
+                memPercentage = Math.min(Math.round(gi * 100), 100);
+            }
+            
+            document.getElementById('memoryBar').style.width = `${memPercentage}%`;
+            
+            // Stockage
+            const storageValue = podData.storage || 'N/A';
+            document.getElementById('storageValueText').textContent = storageValue;
+            
+            // Estimer le pourcentage pour la barre de stockage
+            let storagePercentage = 0;
+            if (storageValue !== 'N/A') {
+                if (storageValue.endsWith('Gi')) {
+                    const gi = parseFloat(storageValue.slice(0, -2));
+                    storagePercentage = Math.min(Math.round(gi * 10), 100);
+                } else if (storageValue.endsWith('Mi')) {
+                    const mi = parseInt(storageValue.slice(0, -2));
+                    storagePercentage = Math.min(Math.round(mi / 100), 100);
+                }
+            }
+            
+            document.getElementById('storageBar').style.width = `${storagePercentage}%`;
+            
+            // Afficher le conteneur de stats
+            statsContainer.classList.remove('hidden');
         }
 
         // Nous n'avons plus besoin de loadPodResources comme fonction séparée puisque les ressources sont maintenant incluses dans loadPodStats
