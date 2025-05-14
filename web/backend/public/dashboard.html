@@ -190,6 +190,73 @@
             </div>
         </div>
 
+        <!-- Section Resources Monitoring - Très simplifiée -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Ressources Kubernetes</h2>
+            
+            <div class="space-y-6">
+                <!-- Sélection du Pod pour le monitoring -->
+                <div>
+                    <label for="monitorPodSelector" class="block text-sm font-medium text-gray-700">Sélectionner un Pod:</label>
+                    <select id="monitorPodSelector" onchange="loadPodResources()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                </div>
+                
+                <!-- Affichage simple des ressources -->
+                <div id="resourcesContainer" class="p-4 bg-gray-50 rounded-lg hidden">
+                    <div class="space-y-6">
+                        <!-- CPU Usage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">CPU</span>
+                                <span id="cpuValueText" class="text-sm font-medium">0m</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="cpuBar" class="bg-blue-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Memory Usage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">Mémoire</span>
+                                <span id="memoryValueText" class="text-sm font-medium">0Mi</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="memoryBar" class="bg-green-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Storage Usage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">Stockage</span>
+                                <span id="storageValueText" class="text-sm font-medium">N/A</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="storageBar" class="bg-purple-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Statut du Pod -->
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium text-gray-700">Statut:</span>
+                            <span id="podStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Inconnu
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bouton pour rafraîchir les métriques -->
+                <button onclick="loadPodResources()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    Rafraîchir les métriques
+                </button>
+            </div>
+        </div>
+
         <!-- Zone de résultat -->
         <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
@@ -199,6 +266,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkAuthStatus();
             loadReleasesForNamespace();
+            loadPodsForMonitoring();
         });
 
         function checkAuthStatus() {
@@ -627,6 +695,152 @@
             } else {
                 memBar.style.width = '0%';
                 memText.textContent = resources.memory.used;
+            }
+        }
+
+        // Fonction pour charger les pods disponibles pour le monitoring
+        async function loadPodsForMonitoring() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            const podSelector = document.getElementById('monitorPodSelector');
+            
+            podSelector.innerHTML = '';
+            
+            try {
+                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des pods');
+                }
+                
+                const pods = await response.json();
+                
+                if (pods.length > 0) {
+                    pods.forEach(pod => {
+                        const option = document.createElement('option');
+                        option.value = pod.name;
+                        option.textContent = pod.name;
+                        podSelector.appendChild(option);
+                    });
+                    
+                    // Charger les ressources du premier pod automatiquement
+                    loadPodResources();
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Aucun pod trouvé';
+                    podSelector.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Erreur lors du chargement';
+                podSelector.appendChild(option);
+            }
+        }
+
+        // Fonction pour charger et afficher les ressources d'un pod
+        async function loadPodResources() {
+            const podName = document.getElementById('monitorPodSelector').value;
+            const resourcesContainer = document.getElementById('resourcesContainer');
+            
+            if (!podName) {
+                resourcesContainer.classList.add('hidden');
+                return;
+            }
+            
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            try {
+                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des ressources');
+                }
+                
+                const pods = await response.json();
+                const pod = pods.find(p => p.name === podName);
+                
+                if (!pod) {
+                    throw new Error('Pod non trouvé');
+                }
+                
+                // Convertir les valeurs de CPU pour l'affichage (estimation pour la barre)
+                const cpuValue = pod.cpu;
+                document.getElementById('cpuValueText').textContent = cpuValue;
+                
+                // Estimer le pourcentage pour la barre de CPU (adaptation relative)
+                let cpuPercentage = 0;
+                if (cpuValue.endsWith('m')) {
+                    // Millicores: 1000m = 1 core
+                    const millicores = parseInt(cpuValue.slice(0, -1));
+                    // Estimer 1 core comme 100% (ajuster selon vos besoins)
+                    cpuPercentage = Math.min(Math.round(millicores / 10), 100);
+                } else {
+                    // Cores directs
+                    const cores = parseFloat(cpuValue);
+                    cpuPercentage = Math.min(Math.round(cores * 100), 100);
+                }
+                
+                document.getElementById('cpuBar').style.width = `${cpuPercentage}%`;
+                
+                // Afficher la mémoire
+                const memValue = pod.memory;
+                document.getElementById('memoryValueText').textContent = memValue;
+                
+                // Estimer le pourcentage pour la barre de mémoire
+                let memPercentage = 0;
+                if (memValue.endsWith('Mi')) {
+                    // Mébibytes
+                    const mi = parseInt(memValue.slice(0, -2));
+                    // Estimer 1Gi comme 100% (ajuster selon vos besoins)
+                    memPercentage = Math.min(Math.round(mi / 10), 100);
+                } else if (memValue.endsWith('Gi')) {
+                    // Gibibytes
+                    const gi = parseFloat(memValue.slice(0, -2));
+                    memPercentage = Math.min(Math.round(gi * 100), 100);
+                }
+                
+                document.getElementById('memoryBar').style.width = `${memPercentage}%`;
+                
+                // Afficher le stockage
+                const storageValue = pod.storage;
+                document.getElementById('storageValueText').textContent = storageValue;
+                
+                // Estimer le pourcentage pour la barre de stockage
+                let storagePercentage = 0;
+                if (storageValue !== 'N/A') {
+                    if (storageValue.endsWith('Gi')) {
+                        const gi = parseFloat(storageValue.slice(0, -2));
+                        storagePercentage = Math.min(Math.round(gi * 10), 100);
+                    } else if (storageValue.endsWith('Mi')) {
+                        const mi = parseInt(storageValue.slice(0, -2));
+                        storagePercentage = Math.min(Math.round(mi / 100), 100);
+                    }
+                }
+                
+                document.getElementById('storageBar').style.width = `${storagePercentage}%`;
+                
+                // Afficher le statut du pod avec un badge coloré
+                const statusBadge = document.getElementById('podStatusBadge');
+                statusBadge.textContent = pod.status;
+                
+                if (pod.status === 'Running') {
+                    statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+                } else if (pod.status === 'Pending') {
+                    statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+                } else if (pod.status === 'Error' || pod.status === 'Failed') {
+                    statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+                } else {
+                    statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
+                }
+                
+                // Afficher le conteneur de ressources
+                resourcesContainer.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                resourcesContainer.classList.add('hidden');
             }
         }
     </script>
