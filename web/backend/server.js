@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const routes = require('./routes');
+const authRoutes = require('./Routes/auth');
 const { execSync } = require('child_process');
 const http = require('http');
 const { setupShellWs } = require('./Routes/shellWs');
@@ -41,14 +43,16 @@ function ensureLocalRegistry() {
 
 ensureLocalRegistry();
 
-// Middleware pour parser le JSON
+// Middleware pour parser le JSON et les cookies
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // Servir les fichiers statiques
 app.use(express.static('public'));
 
 // Utiliser les routes
 app.use('/', routes);
+app.use('/auth', authRoutes);
 
 const server = http.createServer(app);
 // Démarrer le serveur HTTP + WebSocket
