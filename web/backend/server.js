@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const routes = require('./routes');
 const { execSync } = require('child_process');
 const http = require('http');
-const { setupShellWs } = require('./shellWs');
+const { setupShellWs } = require('./Routes/shellWs');
 
 const app = express();
 const port = 3000;
@@ -31,9 +31,8 @@ function ensureLocalRegistry() {
             }
         } else {
             // Le conteneur n'existe pas, on le crée
-            // Utiliser 0.0.0.0 pour écouter sur toutes les interfaces
             console.log(`Lancement du registre Podman sur le port ${REGISTRY_PORT}...`);
-            execSync(`podman run -d -p 0.0.0.0:${REGISTRY_PORT}:5000 --name registry registry:2`);
+            execSync(`podman run -d -p ${REGISTRY_PORT}:5000 --name registry registry:2`);
         }
     } catch (err) {
         console.error('Erreur lors du lancement du registre Podman :', err.message);
