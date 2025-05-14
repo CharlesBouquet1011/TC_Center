@@ -23,3 +23,6 @@ ATTENTION la clé de la machine change à chaque Boot, si vous vous êtes connec
 ```bash
 ssh-keygen -R IP
 ```
+transfert de fichier avec `scp source dest` avec la source ou la destination qui est le serveur distant ou votre pc, dans le cadre du serveur distant il faut mettre user@IP:/path
+exemple:
+`scp user@252.124.255.255:/toto/chat.png ./`va copier le fichier /toto/chat dans le répertoire courant

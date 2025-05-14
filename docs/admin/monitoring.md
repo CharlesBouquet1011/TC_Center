@@ -52,3 +52,10 @@ helm upgrade --install k8s-monitoring grafana/k8s-monitoring --namespace monitor
 helm install opentelemetry-operator open-telemetry/opentelemetry-operator --namespace monitoring --create-namespace --set manager.collectorImage.repository=ghcr.io/open-telemetry/opentelemetry-collector-contrib --set manager.collectorImage.tag=latest
 kubectl apply -f /mnt/k3sVolume/otel-collector.yaml
 ```
+
+
+# pistes d'améliorations:
+Utilisation de Argo CD pour monitoring + pipelines de déploiement
+
+Lens pour regarder les objets.
+Loki pour les logs.

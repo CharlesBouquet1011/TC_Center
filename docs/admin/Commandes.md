@@ -33,10 +33,16 @@ exemple d'utilisation:
 `kubectl exec -it frontend-kqdlqd66qsd2-45qd2 -c nginx -n test -- sh`
 Cela vous ouvrira un shell dans le conteneur nginx du pofrontend-kqdlqd66qsd2-45qd2 du namespace test (après vous pouvez y faire les commandes que vous voulez dans un système linux)
 
-# commandes générales:
+# commandes générales k3s:
 `kubectl get {ressource}  -n {namespace}` renverra toutes les ressoures correspondants à votre recherche (pod/node/pvc/ingress etc)
 
 `kubectl delete {ressource} {ressourceName} -n {namespace}`
 supprimera la ressource correspondante dans le namespace indiqué.
 Attention, si la ressource a été installée par helm, elle sera relancée automatiquement. (faire plutôt `helm uninstall {release} -n {namespace}`dans ce cas)
 
+pour mettre à jour des modifications d'un chart helm:
+`helm upgrade {release} {path} -n {namespace}`
+ou désinstaller et réinstaller
+
+Attention, `helm uninstall {release} -n {namespace}`supprime AUSSI les volumes si cela n'a pas été configuré explicitement dans les paramètres du pvc, il faut également configurer une reclaim policy pour que le pod successeur reprenne ce volume après avoir configuré que le volume n'est pas supprimé lorsque la release est supprimée.
+(à utiliser avec parcimonie)
