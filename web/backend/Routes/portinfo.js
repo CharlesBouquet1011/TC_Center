@@ -41,8 +41,11 @@ router.get('/', async (req, res) => {
         const serviceInfo = await execCommand(`kubectl get svc ${releaseName} -n ${namespace} -o json`);
         const serviceJson = JSON.parse(serviceInfo);
 
-        // Obtenir l'adresse IP du nœud
-        const nodeIP = '10.56.115.76'; // IP de votre machine
+        // Obtenir l'adresse IP du nœud automatiquement
+        const serverIpCmd = `hostname -I | awk '{print $1}'`;
+        const nodeIP = (await execCommand(serverIpCmd)).trim() || 'localhost';
+        
+        console.log(`Adresse IP du serveur détectée : ${nodeIP}`);
 
         // Construire la réponse avec les informations de port
         const ports = serviceJson.spec.ports.map(port => ({
@@ -60,7 +63,8 @@ router.get('/', async (req, res) => {
             serviceType: serviceJson.spec.type,
             ports: ports,
             internalDNS: `${releaseName}.${namespace}.svc.cluster.local`,
-            accessUrls: ports.map(p => p.url)
+            accessUrls: ports.map(p => p.url),
+            serverIP: nodeIP
         });
 
     } catch (err) {

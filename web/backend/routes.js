@@ -33,16 +33,4 @@ router.use('/pods', podsRouter);
 // Routes pour les ressources k3s
 router.use('/k3s', k3sResourcesRouter);
 
-// Route de compatibilité pour pod-stats (redirige vers /pods/stats)
-router.get('/pod-stats', (req, res) => {
-  const { namespace, podName } = req.query;
-  res.redirect(`/pods/stats?namespace=${namespace}&podName=${podName}`);
-});
-
-// Route de compatibilité pour logs (redirige vers /pods/logs)
-router.get('/logs', (req, res) => {
-  const { namespace, release } = req.query;
-  res.redirect(`/pods/logs?namespace=${namespace}&release=${release}`);
-});
-
 module.exports = router;
