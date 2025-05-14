@@ -64,7 +64,7 @@ if [ "$ROLE" = "master" ]; then
     --create-namespace \
     --set crds.enabled=true
     
-    ./grafana.sh
+    #./grafana.sh
     fi
 
 echo "Helm est installé avec succès."
