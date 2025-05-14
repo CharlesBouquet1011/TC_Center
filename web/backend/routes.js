@@ -234,50 +234,64 @@ router.get('/logs', async (req, res) => {
 // Route pour récupérer les statistiques d'un pod
 router.get('/pod-stats', async (req, res) => {
   const { namespace, podName } = req.query;
-  
   if (!namespace || !podName) {
-    return res.status(400).json({ error: 'Namespace et nom du pod requis' });
+    return res.status(400).json({ error: 'Namespace et nom de pod requis' });
   }
   
   try {
     process.env.KUBECONFIG = '/etc/rancher/k3s/k3s.yaml';
     
-    // Récupérer l'état et les redémarrages du pod
-    const podStatusCmd = `kubectl get pod ${podName} -n ${namespace} -o jsonpath='{.status.phase}{","}{.status.containerStatuses[0].restartCount}'`;
-    const statusOutput = await execCommand(podStatusCmd);
-    const [status, restarts] = statusOutput.split(',');
+    // Récupérer les informations de base du pod
+    const podInfoCmd = `kubectl get pod ${podName} -n ${namespace} -o json`;
+    const podInfoOutput = await execCommand(podInfoCmd);
+    const podInfo = JSON.parse(podInfoOutput);
     
-    // Récupérer l'utilisation CPU et mémoire (via top pod)
-    let cpuUsage = 'N/A';
-    let memoryUsage = 'N/A';
-    
+    // Récupérer les métriques du pod (CPU et mémoire)
+    let metrics = { cpu: 'N/A', memory: 'N/A' };
     try {
-      // Cette commande peut échouer si metrics-server n'est pas installé
-      const metricsCmd = `kubectl top pod ${podName} -n ${namespace} --no-headers`;
-      const metricsOutput = await execCommand(metricsCmd);
-      const metrics = metricsOutput.trim().split(/\s+/);
+      // Vérifier si metrics-server est disponible
+      const topPodCmd = `kubectl top pod ${podName} -n ${namespace} --no-headers`;
+      const topOutput = await execCommand(topPodCmd);
       
-      if (metrics.length >= 3) {
-        cpuUsage = metrics[1];
-        memoryUsage = metrics[2];
+      // Parser la sortie pour extraire CPU et mémoire
+      // Format typique: "podname 10m 15Mi"
+      const parts = topOutput.split(/\s+/);
+      if (parts.length >= 3) {
+        metrics = {
+          cpu: parts[1],
+          memory: parts[2]
+        };
       }
-    } catch (topErr) {
-      console.warn('Erreur lors de la récupération des métriques:', topErr);
-      // On continue sans les métriques
+    } catch (metricErr) {
+      console.log('Metrics-server non disponible ou autre erreur:', metricErr);
+      // Continuer avec des métriques N/A
     }
+    
+    // Collecter les informations importantes
+    const status = podInfo.status?.phase || 'Unknown';
+    const restarts = podInfo.status?.containerStatuses?.[0]?.restartCount || 0;
+    const startTime = podInfo.status?.startTime || 'Unknown';
+    const containers = podInfo.spec?.containers?.length || 0;
+    const readyContainers = podInfo.status?.containerStatuses?.filter(c => c.ready).length || 0;
+    const ready = `${readyContainers}/${containers}`;
+    const hostIP = podInfo.status?.hostIP || 'Unknown';
+    const podIP = podInfo.status?.podIP || 'Unknown';
     
     res.json({
       name: podName,
-      status: status || 'Inconnu',
-      restarts: restarts || '0',
-      cpu: cpuUsage,
-      memory: memoryUsage
+      namespace,
+      status,
+      ready,
+      restarts,
+      age: startTime,
+      cpu: metrics.cpu,
+      memory: metrics.memory,
+      hostIP,
+      podIP
     });
+    
   } catch (err) {
-    res.status(500).json({ 
-      error: 'Erreur lors de la récupération des statistiques du pod', 
-      details: err.toString() 
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération des statistiques du pod', details: err.toString() });
   }
 });
 
