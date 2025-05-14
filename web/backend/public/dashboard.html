@@ -102,40 +102,56 @@
             </div>
         </div>
 
-        <!-- Section Terminal -->
+        <!-- Section Gestion des Pods -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">Terminal sur un Pod</h2>
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Gestion des Pods</h2>
             <div class="space-y-4">
                 <div>
-                    <label for="terminalReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release (pod) :</label>
-                    <select id="terminalReleaseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                    <label for="podManagementSelect" class="block text-sm font-medium text-gray-700">Sélectionnez un pod :</label>
+                    <select id="podManagementSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
                 </div>
-                <button id="openTerminalButton" onclick="openTerminal()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">Ouvrir le terminal</button>
-                <div id="terminal" class="mt-4" style="height: 300px; width: 100%; background: #1a1a1a; border-radius: 8px;"></div>
-            </div>
-        </div>
-
-        <!-- Section Logs Pod -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">Logs d'un Pod</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="logsReleaseName" class="block text-sm font-medium text-gray-700">Nom de la Release (pod) :</label>
-                    <select id="logsReleaseName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                
+                <!-- Statistiques du pod -->
+                <div id="podStats" class="p-4 bg-gray-50 rounded-lg hidden">
+                    <h3 class="text-lg font-medium mb-2 text-gray-800">Statistiques du pod</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">État :</p>
+                            <p id="podStatus" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Redémarrages :</p>
+                            <p id="podRestarts" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">CPU :</p>
+                            <p id="podCPU" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Mémoire :</p>
+                            <p id="podMemory" class="font-medium">-</p>
+                        </div>
+                    </div>
                 </div>
-                <button id="downloadLogsButton" onclick="downloadPodLogs()" class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md">Télécharger les logs</button>
-            </div>
-        </div>
-
-        <!-- Section Describe K3S -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">Describe Pod</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="describeResourceName" class="block text-sm font-medium text-gray-700">Nom du pod :</label>
-                    <select id="describeResourceName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                
+                <!-- Actions sur le pod -->
+                <div class="flex flex-wrap gap-2">
+                    <button id="refreshPodStatsButton" onclick="loadPodStats()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">
+                        Rafraîchir les statistiques
+                    </button>
+                    <button id="openPodTerminalButton" onclick="openPodTerminal()" class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md">
+                        Ouvrir le terminal
+                    </button>
+                    <button id="downloadPodLogsButton" onclick="downloadPodLogs()" class="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md">
+                        Télécharger les logs
+                    </button>
+                    <button id="downloadPodDescribeButton" onclick="downloadPodDescribe()" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md">
+                        Télécharger le describe
+                    </button>
                 </div>
-                <button id="downloadDescribeButton" onclick="downloadDescribeInfo()" class="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md">Télécharger le describe</button>
+                
+                <!-- Terminal -->
+                <div id="podTerminal" class="mt-4 hidden" style="height: 300px; width: 100%; background: #1a1a1a; border-radius: 8px;"></div>
             </div>
         </div>
 
@@ -144,6 +160,9 @@
     </div>
 
     <script>
+        // Variables globales pour le terminal
+        let term, ws;
+        
         // Vérifier si l'utilisateur est connecté au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
             checkAuthStatus();
@@ -225,12 +244,12 @@
             const namespace = user.username.toLowerCase();
             const checkSelect = document.getElementById('checkReleaseName');
             const deleteSelect = document.getElementById('deleteReleaseName');
-            const terminalSelect = document.getElementById('terminalReleaseName');
-            const logsSelect = document.getElementById('logsReleaseName');
+            const podManagementSelect = document.getElementById('podManagementSelect');
+            
             checkSelect.innerHTML = '';
             deleteSelect.innerHTML = '';
-            terminalSelect.innerHTML = '';
-            logsSelect.innerHTML = '';
+            podManagementSelect.innerHTML = '';
+            
             try {
                 const response = await fetch(`/releases?namespace=${encodeURIComponent(namespace)}`);
                 const data = await response.json();
@@ -240,18 +259,11 @@
                         opt1.value = r.name;
                         opt1.textContent = r.name;
                         checkSelect.appendChild(opt1);
+                        
                         const opt2 = document.createElement('option');
                         opt2.value = r.name;
                         opt2.textContent = r.name;
                         deleteSelect.appendChild(opt2);
-                        const opt3 = document.createElement('option');
-                        opt3.value = r.name;
-                        opt3.textContent = r.name;
-                        terminalSelect.appendChild(opt3);
-                        const opt4 = document.createElement('option');
-                        opt4.value = r.name;
-                        opt4.textContent = r.name;
-                        logsSelect.appendChild(opt4);
                     });
                 } else {
                     const opt = document.createElement('option');
@@ -259,21 +271,205 @@
                     opt.textContent = 'Aucune release trouvée';
                     checkSelect.appendChild(opt);
                     deleteSelect.appendChild(opt.cloneNode(true));
-                    terminalSelect.appendChild(opt.cloneNode(true));
-                    logsSelect.appendChild(opt.cloneNode(true));
                 }
                 
-                // Charger les ressources pour le describe k3s
-                loadResourcesForType();
+                // Charger les pods pour la gestion des pods
+                loadPods();
             } catch (e) {
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = 'Erreur lors du chargement';
                 checkSelect.appendChild(opt);
                 deleteSelect.appendChild(opt.cloneNode(true));
-                terminalSelect.appendChild(opt.cloneNode(true));
-                logsSelect.appendChild(opt.cloneNode(true));
+                podManagementSelect.appendChild(opt.cloneNode(true));
             }
+        }
+
+        // Fonction pour charger les pods
+        async function loadPods() {
+            const podManagementSelect = document.getElementById('podManagementSelect');
+            podManagementSelect.innerHTML = '';
+            
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            try {
+                // Utiliser kubectl pour récupérer les noms des pods
+                const response = await fetch(`/api-resources?resourceType=pod&namespace=${encodeURIComponent(namespace)}`);
+                
+                if (!response.ok) {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Aucun pod trouvé';
+                    podManagementSelect.appendChild(opt);
+                    return;
+                }
+                
+                const resources = await response.json();
+                if (Array.isArray(resources) && resources.length > 0) {
+                    resources.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.name;
+                        opt.textContent = r.name;
+                        podManagementSelect.appendChild(opt);
+                    });
+                    
+                    // Charger les statistiques pour le premier pod sélectionné
+                    if (resources.length > 0) {
+                        loadPodStats();
+                    }
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'Aucun pod trouvé';
+                    podManagementSelect.appendChild(opt);
+                }
+            } catch (e) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Erreur lors du chargement';
+                podManagementSelect.appendChild(opt);
+            }
+
+            // Ajouter un event listener pour le changement de pod
+            podManagementSelect.addEventListener('change', loadPodStats);
+        }
+
+        // Fonction pour charger les statistiques d'un pod
+        async function loadPodStats() {
+            const podName = document.getElementById('podManagementSelect').value;
+            const podStatsDiv = document.getElementById('podStats');
+            
+            if (!podName) {
+                podStatsDiv.classList.add('hidden');
+                return;
+            }
+            
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            try {
+                const response = await fetch(`/pod-stats?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`);
+                
+                if (!response.ok) {
+                    alert('Erreur lors de la récupération des statistiques du pod');
+                    return;
+                }
+                
+                const stats = await response.json();
+                
+                // Mettre à jour les statistiques
+                document.getElementById('podStatus').textContent = stats.status;
+                document.getElementById('podRestarts').textContent = stats.restarts;
+                document.getElementById('podCPU').textContent = stats.cpu;
+                document.getElementById('podMemory').textContent = stats.memory;
+                
+                // Appliquer une couleur selon l'état
+                const statusElement = document.getElementById('podStatus');
+                statusElement.className = 'font-medium';
+                
+                if (stats.status === 'Running') {
+                    statusElement.classList.add('text-green-600');
+                } else if (stats.status === 'Pending') {
+                    statusElement.classList.add('text-yellow-600');
+                } else if (stats.status === 'Failed' || stats.status === 'Unknown') {
+                    statusElement.classList.add('text-red-600');
+                }
+                
+                // Afficher le div des statistiques
+                podStatsDiv.classList.remove('hidden');
+            } catch (error) {
+                console.error('Erreur:', error);
+                podStatsDiv.classList.add('hidden');
+            }
+        }
+
+        // Fonction pour ouvrir un terminal sur un pod
+        function openPodTerminal() {
+            const podName = document.getElementById('podManagementSelect').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            if (!podName) {
+                alert('Sélectionnez un pod');
+                return;
+            }
+            
+            // Afficher le terminal
+            const terminalDiv = document.getElementById('podTerminal');
+            terminalDiv.classList.remove('hidden');
+            
+            if (term) {
+                term.dispose();
+            }
+            
+            term = new Terminal({
+                theme: { background: '#1a1a1a' },
+                fontSize: 14,
+                cursorBlink: true
+            });
+            
+            term.open(terminalDiv);
+            term.write('Connexion au pod...\r\n');
+            
+            if (ws) ws.close();
+            
+            ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`);
+            
+            ws.onopen = () => {
+                term.write('Terminal prêt.\r\n');
+                term.focus();
+            };
+            
+            ws.onmessage = (event) => {
+                term.write(event.data);
+            };
+            
+            ws.onclose = () => {
+                term.write('\r\n[Connexion fermée]');
+            };
+            
+            ws.onerror = (e) => {
+                term.write('\r\n[Erreur de connexion]');
+            };
+            
+            term.onData(data => {
+                if (ws && ws.readyState === 1) ws.send(data);
+            });
+        }
+
+        // Fonction pour télécharger les logs d'un pod
+        function downloadPodLogs() {
+            const podName = document.getElementById('podManagementSelect').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            if (!podName) {
+                alert('Sélectionnez un pod');
+                return;
+            }
+            
+            fetch(`/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
+                    return res.text();
+                })
+                .then(logs => {
+                    const blob = new Blob([logs], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `logs_${namespace}_${podName}.log`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                })
+                .catch(err => {
+                    alert('Erreur : ' + err.message);
+                });
         }
 
         async function checkPorts() {
@@ -338,87 +534,19 @@
             resultDiv.classList.remove('hidden');
         }
 
-        // Terminal xterm.js et WebSocket
-        let term, ws;
-        function openTerminal() {
-            const releaseName = document.getElementById('terminalReleaseName').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            if (!releaseName || !namespace) {
-                alert('Sélectionnez une release');
-                return;
-            }
-            if (term) {
-                term.dispose();
-            }
-            term = new Terminal({
-                theme: { background: '#1a1a1a' },
-                fontSize: 14,
-                cursorBlink: true
-            });
-            term.open(document.getElementById('terminal'));
-            term.write('Connexion au pod...\r\n');
-            if (ws) ws.close();
-            ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(releaseName)}`);
-            ws.onopen = () => {
-                term.write('Terminal prêt.\r\n');
-                term.focus();
-            };
-            ws.onmessage = (event) => {
-                term.write(event.data);
-            };
-            ws.onclose = () => {
-                term.write('\r\n[Connexion fermée]');
-            };
-            ws.onerror = (e) => {
-                term.write('\r\n[Erreur de connexion]');
-            };
-            term.onData(data => {
-                if (ws && ws.readyState === 1) ws.send(data);
-            });
-        }
-
-        function downloadPodLogs() {
-            const releaseName = document.getElementById('logsReleaseName').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            if (!releaseName || !namespace) {
-                alert('Sélectionnez une release');
-                return;
-            }
-            fetch(`/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(releaseName)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
-                    return res.text();
-                })
-                .then(logs => {
-                    const blob = new Blob([logs], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `logs_${namespace}_${releaseName}.log`;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
-                })
-                .catch(err => {
-                    alert('Erreur : ' + err.message);
-                });
-        }
-
-        function downloadDescribeInfo() {
-            const resourceName = document.getElementById('describeResourceName').value;
-            if (!resourceName) {
+        // Fonction pour télécharger le describe d'un pod
+        function downloadPodDescribe() {
+            const podName = document.getElementById('podManagementSelect').value;
+            
+            if (!podName) {
                 alert('Sélectionnez un pod');
                 return;
             }
+            
             const user = JSON.parse(localStorage.getItem('user'));
             const namespace = user.username.toLowerCase();
             
-            fetch(`/describe-k3s?resourceType=pod&resourceName=${encodeURIComponent(resourceName)}&namespace=${encodeURIComponent(namespace)}`)
+            fetch(`/describe-k3s?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération de la description');
                     return res.text();
@@ -428,7 +556,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `describe_pod_${resourceName}.txt`;
+                    a.download = `describe_pod_${podName}.txt`;
                     document.body.appendChild(a);
                     a.click();
                     setTimeout(() => {
@@ -439,55 +567,6 @@
                 .catch(err => {
                     alert('Erreur : ' + err.message);
                 });
-        }
-
-        async function loadResourcesForType() {
-            const resourceSelect = document.getElementById('describeResourceName');
-            resourceSelect.innerHTML = '';
-            
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            
-            try {
-                // Utiliser kubectl pour récupérer les noms des pods
-                const response = await fetch(`/api-resources?resourceType=pod&namespace=${encodeURIComponent(namespace)}`);
-                
-                // Si l'API n'est pas implémentée, utiliser simplement le nom de la release
-                if (!response.ok) {
-                    const releases = document.getElementById('logsReleaseName').options;
-                    for (let i = 0; i < releases.length; i++) {
-                        const opt = document.createElement('option');
-                        opt.value = releases[i].value;
-                        opt.textContent = releases[i].textContent;
-                        resourceSelect.appendChild(opt);
-                    }
-                    return;
-                }
-                
-                const resources = await response.json();
-                if (Array.isArray(resources) && resources.length > 0) {
-                    resources.forEach(r => {
-                        const opt = document.createElement('option');
-                        opt.value = r.name;
-                        opt.textContent = r.name;
-                        resourceSelect.appendChild(opt);
-                    });
-                } else {
-                    const opt = document.createElement('option');
-                    opt.value = '';
-                    opt.textContent = 'Aucun pod trouvé';
-                    resourceSelect.appendChild(opt);
-                }
-            } catch (e) {
-                // En cas d'erreur, utiliser les noms de release comme options par défaut
-                const releases = document.getElementById('logsReleaseName').options;
-                for (let i = 0; i < releases.length; i++) {
-                    const opt = document.createElement('option');
-                    opt.value = releases[i].value;
-                    opt.textContent = releases[i].textContent;
-                    resourceSelect.appendChild(opt);
-                }
-            }
         }
     </script>
 </body>

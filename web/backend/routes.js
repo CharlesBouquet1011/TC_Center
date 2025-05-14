@@ -231,4 +231,54 @@ router.get('/logs', async (req, res) => {
   }
 });
 
+// Route pour récupérer les statistiques d'un pod
+router.get('/pod-stats', async (req, res) => {
+  const { namespace, podName } = req.query;
+  
+  if (!namespace || !podName) {
+    return res.status(400).json({ error: 'Namespace et nom du pod requis' });
+  }
+  
+  try {
+    process.env.KUBECONFIG = '/etc/rancher/k3s/k3s.yaml';
+    
+    // Récupérer l'état et les redémarrages du pod
+    const podStatusCmd = `kubectl get pod ${podName} -n ${namespace} -o jsonpath='{.status.phase}{","}{.status.containerStatuses[0].restartCount}'`;
+    const statusOutput = await execCommand(podStatusCmd);
+    const [status, restarts] = statusOutput.split(',');
+    
+    // Récupérer l'utilisation CPU et mémoire (via top pod)
+    let cpuUsage = 'N/A';
+    let memoryUsage = 'N/A';
+    
+    try {
+      // Cette commande peut échouer si metrics-server n'est pas installé
+      const metricsCmd = `kubectl top pod ${podName} -n ${namespace} --no-headers`;
+      const metricsOutput = await execCommand(metricsCmd);
+      const metrics = metricsOutput.trim().split(/\s+/);
+      
+      if (metrics.length >= 3) {
+        cpuUsage = metrics[1];
+        memoryUsage = metrics[2];
+      }
+    } catch (topErr) {
+      console.warn('Erreur lors de la récupération des métriques:', topErr);
+      // On continue sans les métriques
+    }
+    
+    res.json({
+      name: podName,
+      status: status || 'Inconnu',
+      restarts: restarts || '0',
+      cpu: cpuUsage,
+      memory: memoryUsage
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      error: 'Erreur lors de la récupération des statistiques du pod', 
+      details: err.toString() 
+    });
+  }
+});
+
 module.exports = router;
