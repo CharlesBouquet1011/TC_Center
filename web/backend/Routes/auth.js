@@ -142,7 +142,7 @@ router.post('/logout', authenticateToken, (req, res) => {
       }
   
     
-      bcrypt.hash(password, saltRounds, (err, hash) => {
+      bcrypt.hash(password, 10, (err, hash) => {
         if (err) {
           return res.status(500).send(err.message);
         }
