@@ -85,8 +85,8 @@ kubectl -n longhorn-system delete pod -l app=longhorn-manager
 
 
 #config podman:
-mkdir home/user/.config/containers/
-cat > home/user/.config/containers/registries.conf <<EOF
+mkdir /home/user/.config/containers/
+cat > /home/user/.config/containers/registries.conf <<EOF
 unqualified-search-registries = ["docker.io"]
 
 [[registry]]
