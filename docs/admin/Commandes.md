@@ -46,3 +46,4 @@ ou désinstaller et réinstaller
 
 Attention, `helm uninstall {release} -n {namespace}`supprime AUSSI les volumes si cela n'a pas été configuré explicitement dans les paramètres du pvc, il faut également configurer une reclaim policy pour que le pod successeur reprenne ce volume après avoir configuré que le volume n'est pas supprimé lorsque la release est supprimée.
 (à utiliser avec parcimonie)
+
