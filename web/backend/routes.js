@@ -156,4 +156,27 @@ router.post('/addUser', (req, res) => {
     });
   });
 
+// Route pour récupérer les logs d'un pod principal d'une release
+router.get('/logs', async (req, res) => {
+  const { namespace, release } = req.query;
+  if (!namespace || !release) {
+    return res.status(400).send('Namespace ou release manquant');
+  }
+  try {
+    process.env.KUBECONFIG = '/etc/rancher/k3s/k3s.yaml';
+    // Récupérer le nom du pod principal
+    const getPodCmd = `kubectl get pods -n ${namespace} -l app=${release} -o jsonpath='{.items[0].metadata.name}'`;
+    let podName = await execCommand(getPodCmd);
+    podName = podName.replace(/'/g, '').trim();
+    if (!podName) {
+      return res.status(404).send('Aucun pod trouvé pour cette release');
+    }
+    // Récupérer les logs
+    const logs = await execCommand(`kubectl logs -n ${namespace} ${podName}`);
+    res.type('text/plain').send(logs);
+  } catch (err) {
+    res.status(500).send('Erreur lors de la récupération des logs : ' + err);
+  }
+});
+
 module.exports = router;
