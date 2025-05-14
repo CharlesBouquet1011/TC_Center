@@ -176,4 +176,16 @@ router.post('/logout', authenticateToken, (req, res) => {
       });
     });
 
+// Route pour vérifier l'authentification
+router.get('/check', authenticateToken, (req, res) => {
+    res.status(200).json({ 
+        message: 'Authentifié',
+        user: {
+            id: req.user.id,
+            username: req.user.username,
+            email: req.user.email
+        }
+    });
+});
+
 module.exports = router;

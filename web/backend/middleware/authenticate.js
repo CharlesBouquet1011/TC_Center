@@ -1,41 +1,41 @@
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../utils/jwt');
+const { JWT_SECRET } = require('../config/jwt');
 const db = require('../db/init');
 
-const authenticateToken = async (req, res, next) => {
-    try {
-        // Vérifier le token dans les cookies
-        const token = req.cookies.token;
-        
-        if (!token) {
-            return res.status(401).json({ message: 'Token manquant' });
+function authenticateToken(req, res, next) {
+    // Vérifier d'abord le header personnalisé
+    const authHeader = req.headers['x-auth-token'];
+    const requestType = req.headers['x-request-type'];
+
+    // Si c'est une requête API, utiliser le header personnalisé
+    if (requestType === 'API') {
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Token manquant dans le header X-Auth-Token' });
         }
 
-        // Vérifier le token JWT
-        const decoded = jwt.verify(token, JWT_SECRET);
-        
-        // Vérifier si la session existe dans la base de données
-        db.get('SELECT * FROM sessions WHERE token = ? AND user_id = ?', 
-            [token, decoded.id], 
-            (err, session) => {
-                if (err) {
-                    return res.status(500).json({ message: 'Erreur lors de la vérification de la session' });
-                }
-                
-                if (!session) {
-                    return res.status(403).json({ message: 'Session invalide ou expirée' });
-                }
-
-                req.user = decoded;
-                next();
+        jwt.verify(authHeader, JWT_SECRET, (err, user) => {
+            if (err) {
+                return res.status(403).json({ message: 'Token invalide' });
             }
-        );
-    } catch (err) {
-        if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: 'Token expiré' });
+            req.user = user;
+            next();
+        });
+    } else {
+        // Sinon, vérifier le cookie (pour la compatibilité)
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.status(401).json({ message: 'Token manquant dans les cookies' });
         }
-        return res.status(403).json({ message: 'Token invalide' });
+
+        jwt.verify(token, JWT_SECRET, (err, user) => {
+            if (err) {
+                return res.status(403).json({ message: 'Token invalide' });
+            }
+            req.user = user;
+            next();
+        });
     }
-};
+}
 
 module.exports = authenticateToken;
