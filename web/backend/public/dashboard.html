@@ -85,7 +85,7 @@
             </div>
         </div>
 
-        <!-- Section Pod Management - Nouvelle section unifiée -->
+        <!-- Section Pod Management -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Gestion des Pods</h2>
             
@@ -93,13 +93,15 @@
                 <!-- Sélection du Pod -->
                 <div>
                     <label for="podSelector" class="block text-sm font-medium text-gray-700">Sélectionner un Pod:</label>
-                    <select id="podSelector" onchange="loadPodStats()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                    <select id="podSelector" onchange="loadPodStats(); loadPodResources();" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
                 </div>
                 
                 <!-- Statistiques du Pod -->
                 <div id="podStatsContainer" class="p-4 bg-gray-50 rounded-lg hidden">
                     <h3 class="text-lg font-medium text-gray-800 mb-3">Statistiques du Pod</h3>
-                    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    
+                    <!-- Informations générales -->
+                    <div class="grid grid-cols-2 gap-4 md:grid-cols-3 mb-4">
                         <div class="bg-white p-3 rounded shadow-sm">
                             <span class="text-xs text-gray-500">Statut</span>
                             <div id="podStatus" class="text-sm font-semibold mt-1">-</div>
@@ -113,24 +115,15 @@
                             <div id="podRestarts" class="text-sm font-semibold mt-1">-</div>
                         </div>
                         <div class="bg-white p-3 rounded shadow-sm">
-                            <span class="text-xs text-gray-500">IP</span>
-                            <div id="podIP" class="text-sm font-semibold mt-1">-</div>
-                        </div>
-                        <div class="bg-white p-3 rounded shadow-sm">
-                            <span class="text-xs text-gray-500">CPU</span>
-                            <div id="podCPU" class="text-sm font-semibold mt-1">-</div>
-                        </div>
-                        <div class="bg-white p-3 rounded shadow-sm">
-                            <span class="text-xs text-gray-500">Mémoire</span>
-                            <div id="podMemory" class="text-sm font-semibold mt-1">-</div>
-                        </div>
-                        <div class="bg-white p-3 rounded shadow-sm">
                             <span class="text-xs text-gray-500">Nœud</span>
                             <div id="podNode" class="text-sm font-semibold mt-1">-</div>
                         </div>
                         <div class="bg-white p-3 rounded shadow-sm">
                             <span class="text-xs text-gray-500">Âge</span>
                             <div id="podAge" class="text-sm font-semibold mt-1">-</div>
+                        </div>
+                        <div class="bg-white p-3 rounded shadow-sm">
+                            <button onclick="downloadPodIP()" class="text-xs text-blue-600 hover:text-blue-800 underline">Télécharger info IP</button>
                         </div>
                     </div>
                 </div>
@@ -158,9 +151,56 @@
                     </div>
                     <div id="terminal" style="height: 300px; width: 100%; background: #1a1a1a; border-radius: 8px;"></div>
                 </div>
+
+                <!-- Ressources du Pod -->
+                <div id="resourcesContainer" class="p-4 bg-gray-50 rounded-lg hidden">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3">Ressources du Pod</h3>
+                    <div class="space-y-4">
+                        <!-- CPU Usage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">CPU</span>
+                                <span id="cpuValueText" class="text-sm font-medium">0m</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="cpuBar" class="bg-blue-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Memory Usage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">Mémoire</span>
+                                <span id="memoryValueText" class="text-sm font-medium">0Mi</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="memoryBar" class="bg-green-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Storage Usage -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">Stockage</span>
+                                <span id="storageValueText" class="text-sm font-medium">N/A</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div id="storageBar" class="bg-purple-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bouton pour rafraîchir les métriques -->
+                        <button onclick="loadPodResources()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                            </svg>
+                            Rafraîchir les métriques
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-        
+
         <!-- Zone de résultat -->
         <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6 font-mono text-sm"></div>
     </div>
@@ -252,7 +292,7 @@
             podSelector.innerHTML = '';
             
             try {
-                const response = await fetch(`/releases?namespace=${encodeURIComponent(namespace)}`);
+                const response = await fetch(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
@@ -409,7 +449,7 @@
                 return;
             }
             
-            fetch(`/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
+            fetch(`/pods/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
                     return res.text();
@@ -442,7 +482,7 @@
                 return;
             }
             
-            fetch(`/describe-k3s?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
+            fetch(`/k3s/describe?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération de la description');
                     return res.text();
@@ -465,7 +505,7 @@
                 });
         }
 
-        // Nouvelle fonction pour charger les statistiques d'un pod
+        // Nouvelle fonction pour charger les statistiques d'un pod avec ressources détaillées
         async function loadPodStats() {
             const podName = document.getElementById('podSelector').value;
             const statsContainer = document.getElementById('podStatsContainer');
@@ -479,44 +519,51 @@
             const namespace = user.username.toLowerCase();
             
             try {
-                const response = await fetch(`/pod-stats?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`);
+                // Charger les infos détaillées du pod depuis la nouvelle API
+                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
                 
                 if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des stats du pod');
+                    throw new Error('Erreur lors de la récupération des données du pod');
                 }
                 
-                const stats = await response.json();
+                const podsData = await response.json();
+                const podData = podsData.find(p => p.name === podName);
                 
-                // Mise à jour des statistiques dans l'interface
-                document.getElementById('podStatus').textContent = stats.status;
-                document.getElementById('podReady').textContent = stats.ready;
-                document.getElementById('podRestarts').textContent = stats.restarts;
-                document.getElementById('podIP').textContent = stats.podIP;
-                document.getElementById('podCPU').textContent = stats.cpu;
-                document.getElementById('podMemory').textContent = stats.memory;
-                document.getElementById('podNode').textContent = stats.hostIP;
+                if (!podData) {
+                    throw new Error(`Pod ${podName} non trouvé`);
+                }
+                
+                // Mettre à jour les informations générales
+                document.getElementById('podStatus').textContent = podData.status;
+                document.getElementById('podReady').textContent = podData.ready || 'N/A';
+                document.getElementById('podRestarts').textContent = podData.restarts || '0';
+                document.getElementById('podNode').textContent = podData.node || 'N/A';
                 
                 // Calculer l'âge relatif
-                const age = new Date(stats.age);
-                const now = new Date();
-                const diffTime = Math.abs(now - age);
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                let ageText = '';
-                
-                if (diffDays > 0) {
-                    ageText = `${diffDays}j ${diffHours}h`;
+                if (podData.startTime) {
+                    const age = new Date(podData.startTime);
+                    const now = new Date();
+                    const diffTime = Math.abs(now - age);
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    let ageText = '';
+                    
+                    if (diffDays > 0) {
+                        ageText = `${diffDays}j ${diffHours}h`;
+                    } else {
+                        ageText = `${diffHours}h`;
+                    }
+                    
+                    document.getElementById('podAge').textContent = ageText;
                 } else {
-                    ageText = `${diffHours}h`;
+                    document.getElementById('podAge').textContent = 'Inconnu';
                 }
-                
-                document.getElementById('podAge').textContent = ageText;
                 
                 // Colorer le statut
                 const statusElem = document.getElementById('podStatus');
-                if (stats.status === 'Running') {
+                if (podData.status === 'Running') {
                     statusElem.className = 'text-sm font-semibold mt-1 text-green-600';
-                } else if (stats.status === 'Pending') {
+                } else if (podData.status === 'Pending') {
                     statusElem.className = 'text-sm font-semibold mt-1 text-yellow-600';
                 } else {
                     statusElem.className = 'text-sm font-semibold mt-1 text-red-600';
@@ -525,9 +572,143 @@
                 // Afficher le conteneur de stats
                 statsContainer.classList.remove('hidden');
                 
+                // Charger également les ressources
+                loadPodResources();
+                
             } catch (err) {
                 console.error('Erreur lors du chargement des stats:', err);
                 statsContainer.classList.add('hidden');
+            }
+        }
+
+        // Nouvelle fonction pour télécharger les informations d'IP
+        function downloadPodIP() {
+            const podName = document.getElementById('podSelector').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            if (!podName) {
+                alert('Sélectionnez un pod');
+                return;
+            }
+            
+            fetch(`/pods/ip-info?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Erreur lors de la récupération des informations IP');
+                    return res.json();
+                })
+                .then(data => {
+                    // Créer un blob avec les données formatées
+                    const content = JSON.stringify(data, null, 2);
+                    const blob = new Blob([content], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Créer un lien de téléchargement
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ip_info_${podName}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Nettoyer
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                })
+                .catch(err => {
+                    alert('Erreur : ' + err.message);
+                });
+        }
+
+        // Fonction pour charger et afficher les ressources d'un pod
+        async function loadPodResources() {
+            const podName = document.getElementById('podSelector').value;
+            const resourcesContainer = document.getElementById('resourcesContainer');
+            
+            if (!podName) {
+                resourcesContainer.classList.add('hidden');
+                return;
+            }
+            
+            const user = JSON.parse(localStorage.getItem('user'));
+            const namespace = user.username.toLowerCase();
+            
+            try {
+                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des ressources');
+                }
+                
+                const pods = await response.json();
+                const pod = pods.find(p => p.name === podName);
+                
+                if (!pod) {
+                    throw new Error('Pod non trouvé');
+                }
+                
+                // Convertir les valeurs de CPU pour l'affichage (estimation pour la barre)
+                const cpuValue = pod.cpu;
+                document.getElementById('cpuValueText').textContent = cpuValue;
+                
+                // Estimer le pourcentage pour la barre de CPU (adaptation relative)
+                let cpuPercentage = 0;
+                if (cpuValue.endsWith('m')) {
+                    // Millicores: 1000m = 1 core
+                    const millicores = parseInt(cpuValue.slice(0, -1));
+                    // Estimer 1 core comme 100% (ajuster selon vos besoins)
+                    cpuPercentage = Math.min(Math.round(millicores / 10), 100);
+                } else {
+                    // Cores directs
+                    const cores = parseFloat(cpuValue);
+                    cpuPercentage = Math.min(Math.round(cores * 100), 100);
+                }
+                
+                document.getElementById('cpuBar').style.width = `${cpuPercentage}%`;
+                
+                // Afficher la mémoire
+                const memValue = pod.memory;
+                document.getElementById('memoryValueText').textContent = memValue;
+                
+                // Estimer le pourcentage pour la barre de mémoire
+                let memPercentage = 0;
+                if (memValue.endsWith('Mi')) {
+                    // Mébibytes
+                    const mi = parseInt(memValue.slice(0, -2));
+                    // Estimer 1Gi comme 100% (ajuster selon vos besoins)
+                    memPercentage = Math.min(Math.round(mi / 10), 100);
+                } else if (memValue.endsWith('Gi')) {
+                    // Gibibytes
+                    const gi = parseFloat(memValue.slice(0, -2));
+                    memPercentage = Math.min(Math.round(gi * 100), 100);
+                }
+                
+                document.getElementById('memoryBar').style.width = `${memPercentage}%`;
+                
+                // Afficher le stockage
+                const storageValue = pod.storage;
+                document.getElementById('storageValueText').textContent = storageValue;
+                
+                // Estimer le pourcentage pour la barre de stockage
+                let storagePercentage = 0;
+                if (storageValue !== 'N/A') {
+                    if (storageValue.endsWith('Gi')) {
+                        const gi = parseFloat(storageValue.slice(0, -2));
+                        storagePercentage = Math.min(Math.round(gi * 10), 100);
+                    } else if (storageValue.endsWith('Mi')) {
+                        const mi = parseInt(storageValue.slice(0, -2));
+                        storagePercentage = Math.min(Math.round(mi / 100), 100);
+                    }
+                }
+                
+                document.getElementById('storageBar').style.width = `${storagePercentage}%`;
+                
+                // Afficher le conteneur de ressources
+                resourcesContainer.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                resourcesContainer.classList.add('hidden');
             }
         }
     </script>
