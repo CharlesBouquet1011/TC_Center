@@ -174,10 +174,7 @@
                 </div>
                 
                 <!-- Actions sur le Pod -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <button onclick="checkPorts()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">
-                        Vérifier les Ports
-                    </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <button onclick="downloadPodLogs()" class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md">
                         Télécharger les Logs
                     </button>
@@ -381,25 +378,6 @@
                 opt.value = '';
                 opt.textContent = 'Erreur lors du chargement';
                 podSelector.appendChild(opt);
-            }
-        }
-
-        async function checkPorts() {
-            const podName = document.getElementById('podSelector').value;
-            if (!podName) {
-                alert('Sélectionnez un pod');
-                return;
-            }
-
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-
-            try {
-                const response = await fetch(`/ports?releaseName=${podName}&namespace=${namespace}`);
-                const result = await response.json();
-                displayResult(result, response.ok);
-            } catch (error) {
-                displayResult({ error: error.message }, false);
             }
         }
 

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { deployRouter, undeployRouter } = require('./Routes/deployer');
-const portInfoRouter = require('./Routes/portinfo');
 const authenticateToken = require('./middleware/authenticate');
 const authRoutes = require('./Routes/auth');
 const sessionRoutes = require('./Routes/session');
@@ -14,9 +13,6 @@ router.use('/deploy', deployRouter);
 
 // Route pour la suppression
 router.use('/undeploy', undeployRouter);
-
-// Route pour les informations de port
-router.use('/ports', portInfoRouter);
 
 // Routes d'authentification
 router.use('/auth', authRoutes);
