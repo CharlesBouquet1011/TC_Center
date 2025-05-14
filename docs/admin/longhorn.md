@@ -27,3 +27,5 @@ récupérer IP et port avec `kubectl get svc -n longhorn-system`
 
 Il y a ensuite moyen d'attacher des volumes à des noeuds, de faire des backups, de gérer les volumes longhorn, etc...
 Utile pour débuguer des volumes qui ne fonctionnent pas. (il y a également un monitoring du stockage utilisé)
+
+S'il y a un problème avec un disque unschedulable, il faut aller sur l'interface d'administration dans le navigateur, dans les noeuds, cliquer tout à droite sur les 3 barres puis edit node and disks puis supprimer le disque fautif et remettre un disque longhorn sur /mnt/k3sVolume/longhorn
