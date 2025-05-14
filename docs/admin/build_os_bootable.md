@@ -35,3 +35,16 @@ configs: #si authentification
       password: auth_token #à remplacer évidemment
 
 ```
+
+
+# explication des fichiers d'os bootable 
+- **config.sfr**: configure les différentes dépendances apt, mets les fichiers de config aux bons endroits dans l'os etc
+- **ask.service**, enable_ask_service: lancent k3s.sh (j'avais besoin d'un shell intéractif au boot)
+- **enable ssh.chroot**: active le ssh
+- **configAfterBoot.sh**: à lancer après le boot s'il y a eu un problème de config au boot (rarement utile)
+- **config ssh**: configure le ssh (les clés ssh acceptées)
+- **docker.chroot**: lance docker et podman et configure les deux (leur stockage persistent)
+- **enable mount disk.chroot**, **mountdisk.service**: lance startmount.sh
+- **hostname-k3s.sh**: change le nom d'hôte du PC au boot (pour k3s)
+- **k3s.sh**: configure et télécharge k3s (master/agent) le volume de stockage de k3s,télécharge helm, télécharge et configure longhorn et son volume de stockage
+- **startnet.sh**: lance l'éthernet (pour s'assurer que ce soit bien présent pour télécharger k3s, helm etc)
