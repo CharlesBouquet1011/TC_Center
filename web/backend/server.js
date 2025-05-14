@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const routes = require('./routes');
 const { execSync } = require('child_process');
 const http = require('http');
-const { setupShellWs } = require('./shellWs');
+const { setupShellWs } = require('./Routes/shellWs');
 
 const app = express();
 const port = 3000;
