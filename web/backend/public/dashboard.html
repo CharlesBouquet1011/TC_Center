@@ -474,6 +474,7 @@
             
             if (ws) ws.close();
             
+            // Utiliser directement le nom complet du pod
             ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`);
             
             ws.onopen = () => {
@@ -491,6 +492,7 @@
             
             ws.onerror = (e) => {
                 term.write('\r\n[Erreur de connexion]');
+                console.error('Erreur WebSocket:', e);
             };
             
             term.onData(data => {
@@ -508,6 +510,7 @@
                 return;
             }
             
+            // Utiliser directement le nom complet du pod
             fetch(`/pods/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
@@ -541,6 +544,7 @@
                 return;
             }
             
+            // Le paramètre resourceName doit être le nom complet du pod
             fetch(`/k3s/describe?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
                 .then(res => {
                     if (!res.ok) throw new Error('Erreur lors de la récupération de la description');
@@ -561,6 +565,7 @@
                 })
                 .catch(err => {
                     alert('Erreur : ' + err.message);
+                    console.error('Erreur describe:', err);
                 });
         }
 

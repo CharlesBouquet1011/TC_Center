@@ -10,13 +10,17 @@ router.get('/logs', async (req, res) => {
   }
   try {
     process.env.KUBECONFIG = '/etc/rancher/k3s/k3s.yaml';
-    // Récupérer le nom du pod principal
-    const getPodCmd = `kubectl get pods -n ${namespace} -l app=${release} -o jsonpath='{.items[0].metadata.name}'`;
-    let podName = await execCommand(getPodCmd);
-    podName = podName.replace(/'/g, '').trim();
-    if (!podName) {
-      return res.status(404).send('Aucun pod trouvé pour cette release');
+    // Utiliser directement le nom du pod fourni
+    const podName = release;
+    
+    // Vérifier si le pod existe
+    const checkPodCmd = `kubectl get pod ${podName} -n ${namespace} -o name`;
+    const podExists = await execCommand(checkPodCmd).then(() => true).catch(() => false);
+    
+    if (!podExists) {
+      return res.status(404).send('Pod non trouvé');
     }
+    
     // Récupérer les logs
     const logs = await execCommand(`kubectl logs -n ${namespace} ${podName}`);
     res.type('text/plain').send(logs);
