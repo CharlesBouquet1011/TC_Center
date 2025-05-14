@@ -107,7 +107,7 @@ router.post('/register', (req, res) => {
     if (err) {
       return res.status(500).json({ message: 'Erreur lors de la vérification des identifiants' });
     }
-1 hour ago
+    
     if (row) {
       if (row.email === email) {
         return res.status(400).json({ message: 'Cet email est déjà utilisé' });
@@ -189,6 +189,9 @@ router.post('/addUser', (req, res) => {
       return res.status(400).send('Champs requis manquants');
     }
 
+    // Ajouter la logique d'ajout d'utilisateur ici si nécessaire
+    res.status(201).send('Utilisateur créé');
+});
 
 // Route pour récupérer les logs d'un pod principal d'une release
 router.get('/logs', async (req, res) => {
