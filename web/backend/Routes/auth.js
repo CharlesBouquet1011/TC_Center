@@ -8,18 +8,22 @@ const { JWT_SECRET } = require('../utils/jwt');
 
 router.post('/register', (req, res) => {
     const { email, username, password } = req.body;
+    console.log('Tentative d\'inscription pour:', { email, username });
   
     if (!email || !username || !password) {
+      console.log('Champs manquants:', { email: !!email, username: !!username, password: !!password });
       return res.status(400).json({ message: 'Tous les champs sont requis' });
     }
   
     // Vérifier si l'email ou le username est déjà utilisé
     db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], (err, row) => {
       if (err) {
+        console.error('Erreur lors de la vérification des identifiants:', err);
         return res.status(500).json({ message: 'Erreur lors de la vérification des identifiants' });
       }
   
       if (row) {
+        console.log('Utilisateur existant trouvé:', row);
         if (row.email === email) {
           return res.status(400).json({ message: 'Cet email est déjà utilisé' });
         } else {
@@ -30,8 +34,11 @@ router.post('/register', (req, res) => {
       // Hacher le mot de passe avant de l'enregistrer
       bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
+          console.error('Erreur lors du hachage du mot de passe:', err);
           return res.status(500).json({ message: 'Erreur lors du hachage du mot de passe' });
         }
+  
+        console.log('Mot de passe haché avec succès');
   
         // Ajouter le nouvel utilisateur avec le mot de passe haché
         db.run(
@@ -39,8 +46,10 @@ router.post('/register', (req, res) => {
           [username, email, hashedPassword],
           function(err) {
             if (err) {
+              console.error('Erreur lors de l\'insertion dans la base de données:', err);
               return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
             }
+            console.log('Utilisateur créé avec succès, ID:', this.lastID);
             res.status(201).json({ message: 'Inscription réussie' });
           }
         );
@@ -84,7 +93,8 @@ router.post('/register', (req, res) => {
             { 
               id: row.id,
               username: row.username,
-              email: row.email
+              email: row.email,
+              createdAt: new Date().toISOString()
             },
             JWT_SECRET,
             { expiresIn: '24h' }
@@ -96,23 +106,31 @@ router.post('/register', (req, res) => {
               console.error('Erreur lors de la suppression des anciennes sessions:', err);
             }
 
-            // Créer une nouvelle session
+            // Créer une nouvelle session avec le username
             db.run(
-              'INSERT INTO sessions (user_id, token) VALUES (?, ?)',
-              [row.id, token],
+              'INSERT INTO sessions (user_id, token, username) VALUES (?, ?, ?)',
+              [row.id, token, row.username],
               (err) => {
                 if (err) {
                   console.error('Erreur lors de l\'enregistrement de la session:', err);
                   return res.status(500).json({ message: 'Erreur lors de la création de la session' });
                 }
 
+                // Définir le cookie avec le token
+                res.cookie('token', token, {
+                  httpOnly: true,
+                  secure: process.env.NODE_ENV === 'production', // true en production
+                  sameSite: 'strict',
+                  maxAge: 24 * 60 * 60 * 1000 // 24 heures
+                });
+
                 res.status(200).json({
                   message: 'Connexion réussie',
                   user: {
+                    id: row.id,
                     email: row.email,
                     username: row.username
-                  },
-                  token: token
+                  }
                 });
               }
             );
@@ -123,12 +141,14 @@ router.post('/register', (req, res) => {
   });
 
 router.post('/logout', authenticateToken, (req, res) => {
-    const token = req.headers['authorization'].split(' ')[1];
+    const token = req.cookies.token;
     
     db.run('DELETE FROM sessions WHERE token = ?', [token], (err) => {
         if (err) {
             return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
         }
+        // Supprimer le cookie
+        res.clearCookie('token');
         res.status(200).json({ message: 'Déconnexion réussie' });
     });
 });
@@ -155,5 +175,17 @@ router.post('/logout', authenticateToken, (req, res) => {
         });
       });
     });
+
+// Route pour vérifier l'authentification
+router.get('/check', authenticateToken, (req, res) => {
+    res.status(200).json({ 
+        message: 'Authentifié',
+        user: {
+            id: req.user.id,
+            username: req.user.username,
+            email: req.user.email
+        }
+    });
+});
 
 module.exports = router;
