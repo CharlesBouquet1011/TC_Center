@@ -72,7 +72,7 @@
                     </div>
 
                     <div class="text-sm">
-                        <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+                        <a href="#" id="forgotPasswordLink" class="font-medium text-blue-600 hover:text-blue-500">
                             Mot de passe oublié ?
                         </a>
                     </div>
@@ -96,12 +96,44 @@
         </div>
     </div>
 
+    <!-- Modal pour le mot de passe oublié -->
+    <div id="forgotPasswordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Mot de passe oublié</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">
+                        Entrez votre adresse email pour recevoir un lien de réinitialisation
+                    </p>
+                </div>
+                <form id="forgotPasswordForm" class="mt-4">
+                    <input type="email" id="resetEmail" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Votre email">
+                    <div id="resetEmailMessage" class="hidden mt-2 text-sm"></div>
+                    <div class="mt-4 flex justify-end space-x-3">
+                        <button type="button" id="closeModal"
+                            class="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Annuler
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Envoyer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Gestion du formulaire de connexion
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const identifier = document.getElementById('identifier').value;
             const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
             
             try {
                 const response = await fetch('/auth/login', {
@@ -118,10 +150,68 @@
                 if (response.ok) {
                     window.location.href = 'dashboard.html';
                 } else {
-                    document.getElementById('errorMessage').textContent = data.message;
+                    errorMessage.textContent = data.message;
+                    errorMessage.classList.remove('hidden');
                 }
             } catch (error) {
-                document.getElementById('errorMessage').textContent = 'Erreur lors de la connexion';
+                errorMessage.textContent = 'Erreur lors de la connexion';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+
+        // Gestion du modal de mot de passe oublié
+        const modal = document.getElementById('forgotPasswordModal');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const closeModal = document.getElementById('closeModal');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const resetEmailMessage = document.getElementById('resetEmailMessage');
+
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            resetEmailMessage.classList.add('hidden');
+            forgotPasswordForm.reset();
+        });
+
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+
+            try {
+                const response = await fetch('/auth/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+                resetEmailMessage.classList.remove('hidden');
+
+                if (response.ok) {
+                    resetEmailMessage.textContent = data.message;
+                    resetEmailMessage.classList.remove('text-red-600');
+                    resetEmailMessage.classList.add('text-green-600');
+                    // Fermer le modal après 2 secondes
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        resetEmailMessage.classList.add('hidden');
+                        forgotPasswordForm.reset();
+                    }, 2000);
+                } else {
+                    resetEmailMessage.textContent = data.message;
+                    resetEmailMessage.classList.remove('text-green-600');
+                    resetEmailMessage.classList.add('text-red-600');
+                }
+            } catch (error) {
+                resetEmailMessage.textContent = 'Erreur lors de l\'envoi de la demande';
+                resetEmailMessage.classList.remove('text-green-600');
+                resetEmailMessage.classList.add('text-red-600');
             }
         });
     </script>
