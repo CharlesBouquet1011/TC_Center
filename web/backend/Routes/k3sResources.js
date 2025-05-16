@@ -59,33 +59,42 @@ router.get('/resources', async (req, res) => {
     
     // Récupérer les métriques d'utilisation
     let metricsOutput = '';
+    let metrics = {};
     try {
       metricsOutput = await execCommand(`kubectl top pods -n ${namespace} --no-headers`);
+      
+      // Parser les métriques (format: "podname 10m 15Mi")
+      if (metricsOutput) {
+        metricsOutput.split('\n').filter(line => line.trim()).forEach(line => {
+          const parts = line.split(/\s+/);
+          if (parts.length >= 3) {
+            metrics[parts[0]] = {
+              name: parts[0],
+              cpu: parts[1],
+              memory: parts[2]
+            };
+          }
+        });
+      }
     } catch (err) {
-      console.log('Metrics-server non disponible:', err);
-      return res.status(503).json({ error: 'Metrics-server non disponible' });
-    }
-    
-    // Parser les métriques (format: "podname 10m 15Mi")
-    const metrics = {};
-    if (metricsOutput) {
-      metricsOutput.split('\n').filter(line => line.trim()).forEach(line => {
-        const parts = line.split(/\s+/);
-        if (parts.length >= 3) {
-          metrics[parts[0]] = {
-            name: parts[0],
-            cpu: parts[1],
-            memory: parts[2]
-          };
-        }
-      });
+      console.log('Metrics-server non disponible ou erreur:', err);
+      // Continuer avec un objet metrics vide
     }
     
     // Récupérer l'utilisation du stockage
     const podsList = [];
+    
+    // Traiter tous les pods, même sans métriques
     for (const pod of podsData.items) {
       const podName = pod.metadata.name;
-      if (!metrics[podName]) continue; // Ignorer les pods sans métriques
+      let cpuValue = '0m';
+      let memoryValue = '0Mi';
+      
+      // Utiliser les métriques si disponibles
+      if (metrics[podName]) {
+        cpuValue = metrics[podName].cpu;
+        memoryValue = metrics[podName].memory;
+      }
       
       // Obtenir la taille du stockage utilisé si possible (PVC)
       let storage = 'N/A';
@@ -117,9 +126,13 @@ router.get('/resources', async (req, res) => {
       podsList.push({
         name: podName,
         status: pod.status?.phase || 'Unknown',
-        cpu: metrics[podName].cpu,
-        memory: metrics[podName].memory,
-        storage: storage
+        cpu: cpuValue,
+        memory: memoryValue,
+        storage: storage,
+        ready: `${pod.status?.containerStatuses?.filter(c => c.ready).length || 0}/${pod.spec?.containers?.length || 0}`,
+        restarts: pod.status?.containerStatuses?.[0]?.restartCount || 0,
+        node: pod.spec?.nodeName || 'N/A',
+        startTime: pod.status?.startTime
       });
     }
     
