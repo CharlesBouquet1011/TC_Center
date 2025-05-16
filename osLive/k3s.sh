@@ -93,9 +93,11 @@ while ! mountpoint -q /var/lib/longhorn; do
     # Petite pause si ça échoue (pour éviter boucle folle)
     sleep 1
 done
-kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
-kubectl -n longhorn-system delete pod -l app=longhorn-manager
+if [ "$ROLE" = "master" ]; then
 
+    kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
+    kubectl -n longhorn-system delete pod -l app=longhorn-manager
+    fi
 
 #config podman:
 mkdir -p /home/user/.config/containers/
@@ -120,3 +122,5 @@ cat > /home/user/.config/containers/storage.conf <<EOF
 [storage.options]
   mount_program = "/usr/bin/fuse-overlayfs"
 EOF
+
+sudo chown -R user:user /home/user/.config
