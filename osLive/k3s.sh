@@ -123,4 +123,8 @@ cat > /home/user/.config/containers/storage.conf <<EOF
   mount_program = "/usr/bin/fuse-overlayfs"
 EOF
 
-sudo chown -R user:user /home/user/.config
+while [ "$(stat -c '%U:%G' /home/user/.config)" != "user:user" ]; do
+  echo "Le dossier n'est pas encore à user:user, tentative de correction..."
+  sudo chown -R user:user /home/user/.config
+  sleep 1
+done
