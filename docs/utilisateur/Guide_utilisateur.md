@@ -12,7 +12,8 @@ Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a 
 
 ## 2. Créer un Helm Chart
 
-Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.  
+Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.
+Le Helm Chart doit se trouver à la racine du projet
 Cela inclut :
 - Les ressources nécessaires (Deployments, Services, Ingress, etc.)
 - Les configurations (valeurs par défaut, variables personnalisables)
