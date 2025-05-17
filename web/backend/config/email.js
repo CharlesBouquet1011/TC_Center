@@ -1,3 +1,4 @@
+import defaultEnv from '../../default.env';
 const nodemailer = require('nodemailer');
 
 // Configuration du transporteur d'emails avec Mailtrap
@@ -11,8 +12,8 @@ const transporter = nodemailer.createTransport({
     host: "sandbox.smtp.mailtrap.io",
     port: 2525,
     auth: {
-        user: "VOTRE_USER_MAILTRAP", // Remplacez par votre user Mailtrap
-        pass: "VOTRE_PASS_MAILTRAP"  // Remplacez par votre pass Mailtrap
+        user: defaultEnv.mail, // Remplacez par votre user Mailtrap
+        pass: defaultEnv.password  // Remplacez par votre pass Mailtrap
     }
 });
 

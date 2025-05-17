@@ -1,5 +1,6 @@
 // En production, utilisez une variable d'environnement
-const JWT_SECRET = process.env.JWT_SECRET || 'votre_cle_secrete_tres_securisee';
+import defaultEnv from '../../default.env';
+const JWT_SECRET = process.env.JWT_SECRET || defaultEnv.jwt;
 
 module.exports = {
     JWT_SECRET,

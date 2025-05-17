@@ -50,7 +50,6 @@ Vous devez créer un **token d'accès personnel** afin d’autoriser l'accès s�
 - Donnez-lui un nom explicite (par exemple : `deploy-token-datacenter`)
 - Copiez le token : vous ne pourrez plus le voir après validation
 
-
 ---
 
 ### Étape 2 — Renseigner l’URL et le token sur notre plateforme
@@ -62,25 +61,34 @@ Une fois connecte a votre compte vous aurez acces a une page de dépot ou vous p
   https://gitlab.com/votre-projet/mon-app.git
   ```
 - Collez votre token d'acces au dépôt
+
 ---
 
-
 ### Étape 3 — Validez la soumission de votre application
+
 Une fois le déploiement fini vous verrez un message s'afficher en bas de page:
+
 - Un message d'erreur si le déploiement a echoué. Dans ce cas il faudra de votre côté corriger le probleme avant de retenter un déploiement.
 - Un message de confirmation signifiant que le déploiement s'est déroulé sans erreurs.
 
-## 5. Ouvrir un terminal dans votre pod? 
-un truc du genre
+---
 
-- Suivre le comportement de vos applications en temps réel
-- Détecter rapidement les erreurs ou dysfonctionnements
+## 5 — Gestion des pods
 
-> 🔍 Pensez à consulter régulièrement cette interface pour assurer la stabilité de vos services.
+Depuis votre interface web, vous pouvez ouvrir un terminal directement dans votre pod pour monitorer ses ressources et son activité en temps réel.
 
-## 6. Supprimer une application
+- Lancez une session de terminal sans configuration ni outil externe.
+- Surveillez en temps réel l’usage de votre pod : CPU, mémoire, stockage.
+- Téléchargez un fichier describe pour examiner en détail l’état de vos ressources Kubernetes.
+- Consultez et téléchargez les logs de votre application pour les analyser ou les partager.
+
+> 🔍 Pensez à consulter régulièrement cette interface pour assurer la stabilité et la p
+
+
+## 6 - Supprimer une application
 
 Si vous souhaitez arrêter d’héberger une application :
+
 1. Accédez à l’onglet de suppression.
 2. Renseignez le **release name** de l’application cible.
 3. Validez la suppression.
