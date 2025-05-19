@@ -10,10 +10,13 @@ console.log('Configuration email:', {
 
 // Configuration du transporteur d'emails avec Gmail
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
     auth: {
-        user: process.env.EMAIL_USER + '@gmail.com',
-        pass: process.env.EMAIL_PASSWORD
+        user: "noreplytccenter@gmail.com",
+        pass: "yqyb sxmx bqhw dkoz"
+    },
+    tls: {
+        rejectUnauthorized: false
     }
 });
 
