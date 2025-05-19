@@ -102,31 +102,26 @@
             
             const identifier = document.getElementById('identifier').value;
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-
+            
             try {
-                const response = await fetch('/login', {
+                const response = await fetch('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ identifier, password })
+                    body: JSON.stringify({ identifier, password }),
+                    credentials: 'include'
                 });
-
-                const result = await response.json();
+                
+                const data = await response.json();
                 
                 if (response.ok) {
-                    // Stockage des informations de l'utilisateur
-                    localStorage.setItem('user', JSON.stringify(result.user));
-                    // Redirection vers le dashboard
                     window.location.href = 'dashboard.html';
                 } else {
-                    errorMessage.textContent = result.message || 'Identifiants invalides';
-                    errorMessage.classList.remove('hidden');
+                    document.getElementById('errorMessage').textContent = data.message;
                 }
             } catch (error) {
-                errorMessage.textContent = 'Erreur lors de la connexion';
-                errorMessage.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = 'Erreur lors de la connexion';
             }
         });
     </script>

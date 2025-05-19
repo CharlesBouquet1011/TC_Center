@@ -11,7 +11,7 @@
 À configurer si vous souhaitez pouvoir vous connecter à distance et ainsi gérer votre datacenter sans être physiquement devant les machines.
 
 ### Ajout de votre clé SSH sur la machine 
-tuto
+cf [build_os_bootable.md](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/build_os_bootable.md)
 
 ### Connexion simple
 
@@ -23,3 +23,6 @@ ATTENTION la clé de la machine change à chaque Boot, si vous vous êtes connec
 ```bash
 ssh-keygen -R IP
 ```
+transfert de fichier avec `scp source dest` avec la source ou la destination qui est le serveur distant ou votre pc, dans le cadre du serveur distant il faut mettre user@IP:/path
+exemple:
+`scp user@IP:/toto/chat.png ./`va copier le fichier chat.png dans le répertoire courant (./) ou celui de votre choix.

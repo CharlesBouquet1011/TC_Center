@@ -14,3 +14,5 @@ commandes utiles (sur le node master):
 mot_de_passe
 ou `echo 'TON_MDP_OU_TOKEN' | docker login docker.io --username monuser --password-stdin`
 `sudo docker push username/nom_du_depot:latest`
+(NB avec podman ça devrait être pareil en remplaçant docker par podman)
+
