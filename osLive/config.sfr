@@ -23,6 +23,7 @@ mkdir -p config/package-lists ||true
 touch config/package-lists/desktop.list.chroot ||true 
 echo curl >> config/package-lists/desktop.list.chroot
 echo vim >> config/package-lists/desktop.list.chroot
+echo ntp >> config/package-lists/desktop.list.chroot #pour synchroniser l'heure
 echo tcpdump >> config/package-lists/desktop.list.chroot
 echo libpci3 >> config/package-lists/desktop.list.chroot
 echo firefox-esr >> config/package-lists/desktop.list.chroot

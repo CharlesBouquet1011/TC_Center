@@ -12,7 +12,8 @@ Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a 
 
 ## 2. Créer un Helm Chart
 
-Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.  
+Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.
+Le Helm Chart doit se trouver à la racine du projet
 Cela inclut :
 - Les ressources nécessaires (Deployments, Services, Ingress, etc.)
 - Les configurations (valeurs par défaut, variables personnalisables)
@@ -41,7 +42,7 @@ Pour déployer une application depuis un dépôt Git vers votre datacenter, suiv
 
 ### Étape 1 — Générer un token d'accès
 
-Vous devez créer un **token d'accès personnel** afin d’autoriser l'accès sécurisé au code source du projet.
+Vous devez créer un **token d'accès personnel de type Developer pas Guest** afin d’autoriser l'accès sécurisé au code source du projet.
 
 - Rendez-vous sur la page de gestion des tokens de votre plateforme Git (par exemple, GitLab : `https://gitlab.com/-/profile/personal_access_tokens`)
 - Créez un nouveau token avec **les scopes suivants** :
@@ -71,27 +72,55 @@ Une fois le déploiement fini vous verrez un message s'afficher en bas de page:
 - Un message d'erreur si le déploiement a echoué. Dans ce cas il faudra de votre côté corriger le probleme avant de retenter un déploiement.
 - Un message de confirmation signifiant que le déploiement s'est déroulé sans erreurs.
 
----
 
-## 5 — Gestion des pods
+## 5. Ouvrir un terminal dans votre pod
 
-Depuis votre interface web, vous pouvez ouvrir un terminal directement dans votre pod pour monitorer ses ressources et son activité en temps réel.
+TC Center vous permet d'accéder directement à vos pods via un terminal web intégré. Pour cela :
 
-- Lancez une session de terminal sans configuration ni outil externe.
-- Surveillez en temps réel l’usage de votre pod : CPU, mémoire, stockage.
-- Téléchargez un fichier describe pour examiner en détail l’état de vos ressources Kubernetes.
-- Consultez et téléchargez les logs de votre application pour les analyser ou les partager.
+1. Sélectionnez votre pod dans le menu déroulant de la section "Gestion des Pods"
+2. Cliquez sur le bouton "Ouvrir Terminal"
+3. Un terminal interactif s'ouvrira, vous permettant d'exécuter des commandes directement dans votre pod
 
-> 🔍 Pensez à consulter régulièrement cette interface pour assurer la stabilité et la p
+Le terminal vous donne un accès complet à votre conteneur, vous permettant de :
+- Déboguer votre application en temps réel
+- Exécuter des commandes shell
+- Vérifier les fichiers et les logs
+- Tester des configurations
+
+## 6. Surveiller vos applications
+
+TC Center offre plusieurs outils pour surveiller l'état de vos applications :
+
+### Statistiques des Pods
+Pour chaque pod, vous pouvez visualiser :
+- Le statut actuel
+- L'état de préparation (Ready)
+- Le nombre de redémarrages
+- Le nœud d'hébergement
+- L'âge du pod
+
+### Métriques de ressources
+Un tableau de bord affiche en temps réel :
+- L'utilisation CPU
+- La consommation de mémoire
+- L'utilisation du stockage
+
+Ces métriques sont actualisables à la demande via le bouton "Rafraîchir les métriques".
+
+### Outils de diagnostic
+Plusieurs options sont disponibles pour diagnostiquer vos applications :
+- Téléchargement des logs du pod
+- Téléchargement des informations détaillées (describe)
+- Téléchargement des informations IP
+- Terminal web intégré
 
 
-## 6 - Supprimer une application
+## 7. Supprimer une application
 
 Si vous souhaitez arrêter d’héberger une application :
 
 1. Accédez à l’onglet de suppression.
-2. Renseignez le **release name** de l’application cible.
-3. Validez la suppression.
+2. Validez la suppression.
 
 L’application sera alors supprimée de votre namespace et ne consommera plus de ressources.
 

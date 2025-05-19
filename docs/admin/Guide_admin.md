@@ -4,6 +4,19 @@ Ce guide fournit une vue d’ensemble sur les étapes et composants nécessaires
 
 ---
 
+## ordre des actions pour la configuration:
+- build l'os bootable avec les fichiers requis, (cf partie configuration)
+- faire une clé bootable pour chaque PC et l'insérer dans chaque (cf partie boot)
+- boot le PC master (prendre node01 par convention) et lui donner les infos dont il a besoin, cf partie boot
+- boot les PC agents et les connecter sur l'IP du master, cf partie boot
+
+**A ce niveau, le cluster fonctionne**, il faut maintenant lancer le serveur web pour que les utilisateurs puissent déployer leurs applications:
+- 1
+- 2
+- 3 
+
+
+
 ## Le matériel
 
 Présentation du matériel utilisé pour le déploiement du datacenter, incluant :
