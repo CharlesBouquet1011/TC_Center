@@ -28,39 +28,28 @@ const checkNamespace = async (req, res, next) => {
             return res.status(400).json({ message: 'Namespace manquant dans la requête' });
         }
 
-        // Vérifier que le namespace correspond à celui de l'utilisateur
-        console.log('Recherche du namespace pour l\'utilisateur:', req.user.id);
-        db.get('SELECT namespace FROM users WHERE id = ?', [req.user.id], (err, user) => {
-            if (err) {
-                console.error('Erreur DB:', err);
-                return res.status(500).json({ message: 'Erreur lors de la vérification du namespace' });
-            }
-
-            console.log('Résultat de la requête DB:', user);
-
-            if (!user) {
-                console.error('Utilisateur non trouvé:', req.user.id);
-                return res.status(404).json({ message: 'Utilisateur non trouvé' });
-            }
-
-            console.log('Comparaison des namespaces:', {
-                userNamespace: user.namespace,
-                requestNamespace: namespace,
-                match: user.namespace === namespace
-            });
-
-            if (user.namespace !== namespace) {
-                console.error('Namespace non autorisé:', { 
-                    user: user.namespace, 
-                    request: namespace,
-                    userId: req.user.id
-                });
-                return res.status(403).json({ message: 'Accès non autorisé à ce namespace' });
-            }
-
-            console.log('Vérification du namespace réussie');
-            next();
+        // Vérifier que le namespace correspond au nom d'utilisateur
+        console.log('Vérification du namespace pour l\'utilisateur:', req.user.id);
+        
+        // Le namespace doit correspondre au nom d'utilisateur en minuscules
+        const userNamespace = req.user.username.toLowerCase();
+        console.log('Comparaison des namespaces:', {
+            userNamespace: userNamespace,
+            requestNamespace: namespace,
+            match: userNamespace === namespace
         });
+
+        if (userNamespace !== namespace) {
+            console.error('Namespace non autorisé:', { 
+                user: userNamespace, 
+                request: namespace,
+                userId: req.user.id
+            });
+            return res.status(403).json({ message: 'Accès non autorisé à ce namespace' });
+        }
+
+        console.log('Vérification du namespace réussie');
+        next();
     } catch (err) {
         console.error('Erreur middleware:', err);
         console.error('Stack trace:', err.stack);
