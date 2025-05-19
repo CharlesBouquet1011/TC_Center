@@ -1,31 +1,51 @@
-import defaultEnv from '../../default.env';
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
-// Configuration du transporteur d'emails avec Mailtrap
-// Pour obtenir les identifiants :
-// 1. Créez un compte sur mailtrap.io
-// 2. Allez dans Email Testing > Inboxes
-// 3. Cliquez sur SMTP Settings
-// 4. Sélectionnez Nodemailer
-// 5. Copiez les identifiants ci-dessous
+// Debug: Afficher les variables d'environnement (sans le mot de passe)
+console.log('Configuration email:', {
+    user: process.env.EMAIL_USER,
+    frontendUrl: process.env.FRONTEND_URL,
+    hasPassword: !!process.env.EMAIL_PASSWORD
+});
+
+// Configuration du transporteur d'emails avec Gmail
 const transporter = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: 'gmail',
     auth: {
-        user: defaultEnv.mail, // Remplacez par votre user Mailtrap
-        pass: defaultEnv.password  // Remplacez par votre pass Mailtrap
+        user: process.env.EMAIL_USER + '@gmail.com',
+        pass: process.env.EMAIL_PASSWORD
     }
 });
 
+// Fonction pour vérifier la configuration du transporteur
+async function verifyTransporter() {
+    try {
+        await transporter.verify();
+        console.log('Configuration du transporteur d\'emails vérifiée avec succès');
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la vérification du transporteur:', error);
+        return false;
+    }
+}
+
 // Fonction pour envoyer l'email de réinitialisation
 async function sendResetEmail(email, token) {
+    if (!email || !token) {
+        console.error('Email ou token manquant');
+        return false;
+    }
+
     try {
         console.log('Tentative d\'envoi d\'email à:', email);
         
-        const resetLink = `http://localhost:3000/reset-password.html?token=${token}`;
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password.html?token=${token}`;
         
         const mailOptions = {
-            from: '"TC Center" <noreply@tccenter.com>',
+            from: {
+                name: 'TC Center',
+                address: process.env.EMAIL_USER
+            },
             to: email,
             subject: 'Réinitialisation de votre mot de passe - TC Center',
             html: `
@@ -47,14 +67,30 @@ async function sendResetEmail(email, token) {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email envoyé avec succès:', info.response);
+        console.log('Email envoyé avec succès:', {
+            messageId: info.messageId,
+            response: info.response,
+            accepted: info.accepted,
+            rejected: info.rejected
+        });
         return true;
     } catch (error) {
-        console.error('Erreur lors de l\'envoi de l\'email:', error);
+        console.error('Erreur détaillée lors de l\'envoi de l\'email:', {
+            message: error.message,
+            code: error.code,
+            command: error.command,
+            stack: error.stack
+        });
         return false;
     }
 }
 
+// Vérification initiale du transporteur
+verifyTransporter().catch(error => {
+    console.error('Erreur lors de la vérification initiale du transporteur:', error);
+});
+
 module.exports = {
-    sendResetEmail
+    sendResetEmail,
+    verifyTransporter
 }; 
