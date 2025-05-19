@@ -114,10 +114,12 @@ insecure = true
 location = "134.214.202.221:5000"
 EOF
 
+mkdir -p /mnt/k3sVolume/podman/share/containers/
+chown -R user:user /mnt/k3sVolume/podman/share/containers/
 cat > /home/user/.config/containers/storage.conf <<EOF
 [storage]
   driver = "overlay"
-  graphRoot = "${HOME}/.local/share/containers/storage"
+  graphRoot = "/mnt/k3sVolume/podman/share/containers/storage"
   runRoot = "${XDG_RUNTIME_DIR}/containers"
 [storage.options]
   mount_program = "/usr/bin/fuse-overlayfs"
