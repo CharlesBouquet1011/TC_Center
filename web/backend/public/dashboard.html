@@ -357,28 +357,53 @@
         }
 
         async function loadReleasesForNamespace() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            const deleteSelect = document.getElementById('deleteReleaseName');
-            const podSelector = document.getElementById('podSelector');
-            
-            deleteSelect.innerHTML = '';
-            podSelector.innerHTML = '';
+            console.log('=== Début de loadReleasesForNamespace ===');
             
             try {
+                // Vérifier d'abord l'authentification
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    console.error('Erreur d\'authentification:', authResponse.status);
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const userData = await authResponse.json();
+                console.log('Données utilisateur:', userData);
+                
+                if (!userData || !userData.user || !userData.user.username) {
+                    console.error('Données utilisateur invalides:', userData);
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const namespace = userData.user.username.toLowerCase();
+                console.log('Namespace utilisé:', namespace);
+                
+                const deleteSelect = document.getElementById('deleteReleaseName');
+                const podSelector = document.getElementById('podSelector');
+                
+                deleteSelect.innerHTML = '';
+                podSelector.innerHTML = '';
+                
                 console.log(`Chargement des releases pour namespace: ${namespace}`);
-                const response = await fetch(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
+                const response = await fetch(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`, {
+                    credentials: 'include'
+                });
                 
                 if (!response.ok) {
                     throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
-                console.log(`Releases trouvées: ${data.length}`);
+                console.log(`Releases trouvées:`, data);
                 
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
-                        console.log(`Release: ${r.name}`);
+                        console.log(`Ajout de la release: ${r.name}`);
                         const opt1 = document.createElement('option');
                         opt1.value = r.name;
                         opt1.textContent = r.name;
@@ -391,8 +416,9 @@
                     });
                     
                     // Ensuite, charger les pods disponibles dans le namespace
-                    loadPodsForNamespace(namespace, podSelector);
+                    await loadPodsForNamespace(namespace, podSelector);
                 } else {
+                    console.log('Aucune release trouvée');
                     const opt = document.createElement('option');
                     opt.value = '';
                     opt.textContent = 'Aucune release trouvée';
@@ -404,8 +430,8 @@
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = 'Erreur lors du chargement';
-                deleteSelect.appendChild(opt);
-                podSelector.appendChild(opt.cloneNode(true));
+                document.getElementById('deleteReleaseName').appendChild(opt);
+                document.getElementById('podSelector').appendChild(opt.cloneNode(true));
             }
         }
 
