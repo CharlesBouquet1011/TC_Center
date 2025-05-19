@@ -212,11 +212,31 @@
                 }
                 
                 const data = await response.json();
+                console.log('Données d\'authentification:', data);
+                
+                // Vérifier si le token existe dans les cookies
+                const token = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('token='))
+                    ?.split('=')[1];
+                    
+                console.log('Token trouvé:', token ? 'Oui' : 'Non');
+                
+                if (!token) {
+                    throw new Error('Token non trouvé dans les cookies');
+                }
+                
                 // Mettre à jour le nom d'utilisateur
                 document.getElementById('username').textContent = data.user.username;
+                
+                // Stocker le token dans une variable globale pour un accès facile
+                window.authToken = token;
+                
+                return data;
             } catch (error) {
                 console.error('Erreur d\'authentification:', error);
                 window.location.href = 'login.html';
+                throw error;
             }
         }
 
@@ -263,17 +283,31 @@
         // Fonction utilitaire pour les requêtes API
         async function makeApiRequest(url, method = 'GET', data = null) {
             try {
-                // Afficher les headers dans la console
-                logRequestHeaders(url, method);
+                // Utiliser le token stocké globalement
+                const token = window.authToken || document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('token='))
+                    ?.split('=')[1];
+
+                if (!token) {
+                    throw new Error('Token non trouvé');
+                }
+
+                console.log('Making API request:', {
+                    url,
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Auth-Token': token,
+                        'X-Request-Type': 'API'
+                    }
+                });
 
                 const response = await fetch(url, {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
+                        'X-Auth-Token': token,
                         'X-Request-Type': 'API'
                     },
                     body: data ? JSON.stringify(data) : null,
@@ -281,14 +315,14 @@
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Erreur lors de la requête');
+                    const error = await response.json().catch(() => ({ message: 'Erreur inconnue' }));
+                    throw new Error(error.message || `Erreur HTTP: ${response.status}`);
                 }
 
                 return await response.json();
             } catch (error) {
-                console.error('Erreur:', error);
-                if (error.message.includes('Non authentifié')) {
+                console.error('Erreur API:', error);
+                if (error.message.includes('Token non trouvé') || error.message.includes('Non authentifié')) {
                     window.location.href = 'login.html';
                 }
                 throw error;
@@ -325,16 +359,7 @@
             setLoading('deployButton', 'deployLoading', true);
 
             try {
-                // Vérifier l'authentification d'abord
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Non authentifié');
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
 
                 const data = {
@@ -344,24 +369,9 @@
                     namespace: namespace
                 };
 
-                const response = await fetch('/deploy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
-                        'X-Request-Type': 'API'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                displayResult(result, response.ok);
-                if (response.ok) {
-                    await loadReleasesForNamespace();
-                }
+                const result = await makeApiRequest('/deploy', 'POST', data);
+                displayResult(result, true);
+                await loadReleasesForNamespace();
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
@@ -374,18 +384,7 @@
             console.log('=== Début de loadReleasesForNamespace ===');
             
             try {
-                // Vérifier d'abord l'authentification
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    console.error('Erreur d\'authentification:', authResponse.status);
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 console.log('Données utilisateur:', userData);
                 
                 if (!userData || !userData.user || !userData.user.username) {
@@ -404,15 +403,7 @@
                 podSelector.innerHTML = '';
                 
                 console.log(`Chargement des releases pour namespace: ${namespace}`);
-                const response = await fetch(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`, {
-                    credentials: 'include'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
-                }
-                
-                const data = await response.json();
+                const data = await makeApiRequest(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
                 console.log(`Releases trouvées:`, data);
                 
                 if (Array.isArray(data) && data.length > 0) {
@@ -429,7 +420,6 @@
                         podSelector.appendChild(opt2);
                     });
                     
-                    // Ensuite, charger les pods disponibles dans le namespace
                     await loadPodsForNamespace(namespace, podSelector);
                 } else {
                     console.log('Aucune release trouvée');
@@ -452,26 +442,17 @@
         async function loadPodsForNamespace(namespace, podSelector) {
             try {
                 console.log(`Chargement des pods pour namespace: ${namespace}`);
-                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
-                
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
-                }
-                
-                const pods = await response.json();
+                const pods = await makeApiRequest(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
                 console.log(`Pods trouvés: ${pods.length}`);
                 
-                // Vider d'abord le sélecteur pour éviter les doublons
                 podSelector.innerHTML = '';
                 
                 if (pods.length > 0) {
-                    // Ajouter une option "Sélectionner un pod"
                     const defaultOpt = document.createElement('option');
                     defaultOpt.value = '';
                     defaultOpt.textContent = '-- Sélectionner un pod --';
                     podSelector.appendChild(defaultOpt);
                     
-                    // Ajouter tous les pods trouvés
                     pods.forEach(pod => {
                         console.log(`Pod: ${pod.name} (${pod.status})`);
                         const opt = document.createElement('option');
@@ -480,9 +461,8 @@
                         podSelector.appendChild(opt);
                     });
                     
-                    // Charger automatiquement le premier pod s'il y en a
                     if (pods.length > 0) {
-                        podSelector.selectedIndex = 1; // Sélectionner le premier pod (index 1 car 0 est l'option par défaut)
+                        podSelector.selectedIndex = 1;
                         loadPodStats();
                     }
                 } else {
@@ -506,16 +486,7 @@
             setLoading('deleteButton', 'deleteLoading', true);
 
             try {
-                // Vérifier l'authentification d'abord
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Non authentifié');
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
                 const releaseName = document.getElementById('deleteReleaseName').value;
 
@@ -524,25 +495,9 @@
                     namespace: namespace
                 };
 
-                const response = await fetch('/undeploy', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
-                        'X-Request-Type': 'API'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                displayResult(result, response.ok);
-                
-                if (response.ok) {
-                    await loadReleasesForNamespace();
-                }
+                const result = await makeApiRequest('/undeploy', 'DELETE', data);
+                displayResult(result, true);
+                await loadReleasesForNamespace();
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
@@ -635,24 +590,13 @@
             }
 
             try {
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Non authentifié');
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
                 
                 const response = await fetch(`/pods/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`, {
                     credentials: 'include',
                     headers: {
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
+                        'X-Auth-Token': window.authToken,
                         'X-Request-Type': 'API'
                     }
                 });
@@ -685,24 +629,13 @@
             }
 
             try {
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Non authentifié');
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
                 
                 const response = await fetch(`/k3s/describe?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`, {
                     credentials: 'include',
                     headers: {
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
+                        'X-Auth-Token': window.authToken,
                         'X-Request-Type': 'API'
                     }
                 });
@@ -738,35 +671,12 @@
             }
             
             try {
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Non authentifié');
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
                 
                 console.log(`Chargement des stats pour pod: ${podName} dans namespace: ${namespace}`);
                 
-                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`, {
-                    credentials: 'include',
-                    headers: {
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
-                        'X-Request-Type': 'API'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
-                }
-                
-                const podsData = await response.json();
+                const podsData = await makeApiRequest(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
                 console.log('Pods disponibles:', podsData.map(p => p.name).join(', '));
                 
                 const podData = podsData.find(p => p.name === podName);
@@ -923,24 +833,13 @@
             }
             
             try {
-                const authResponse = await fetch('/auth/check', {
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    throw new Error('Non authentifié');
-                }
-                
-                const userData = await authResponse.json();
+                const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
                 
                 const response = await fetch(`/pods/ip-info?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`, {
                     credentials: 'include',
                     headers: {
-                        'X-Auth-Token': document.cookie
-                            .split('; ')
-                            .find(row => row.startsWith('token='))
-                            ?.split('=')[1],
+                        'X-Auth-Token': window.authToken,
                         'X-Request-Type': 'API'
                     }
                 });
