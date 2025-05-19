@@ -13,40 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Lame.md",
+                "file": "Configuration routeur Cisco 881.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Lame"
-            }
-          },
-          {
-            "id": "c1b55da849b40b96",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "TC-Center.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "TC-Center"
-            }
-          },
-          {
-            "id": "88e360857bfc69ae",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Structure.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Structure"
+              "title": "Configuration routeur Cisco 881"
             }
           }
         ]
@@ -198,10 +170,25 @@
   },
   "active": "aefa7adc0d60412c",
   "lastOpenFiles": [
-    "TC-Center.md",
+    "Configuration routeur.md",
+    "Configuration routeur Cisco 881.md",
+    "utilisateur/Guide_utilisateur.md",
     "Structure.md",
-    "PC.md",
+    "utilisateur/Guide_helm.md",
+    "admin/PC.md",
+    "admin/monitoring.md",
+    "admin/longhorn.md",
+    "admin/Lame.md",
+    "admin/Guide_admin.md",
+    "admin/Commandes.md",
+    "admin/build_os_bootable.md",
+    "admin/boot.md",
+    "📄 Voir la fiche matériel des PC.md",
     "Lame.md",
+    "utilisateur",
+    "admin",
+    "TC-Center.md",
+    "PC.md",
     "Image.md",
     "Bienvenue.md"
   ]
