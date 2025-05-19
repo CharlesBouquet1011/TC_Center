@@ -8,6 +8,7 @@ const sessionRoutes = require('./Routes/session');
 const releasesRoutes = require('./Routes/releases');
 const podsRouter = require('./Routes/pods');
 const k3sResourcesRouter = require('./Routes/k3sResources');
+const podmanRoutes = require('./Routes/podman');
 
 // Route pour le déploiement
 router.use('/deploy', authenticateToken, checkNamespace, deployRouter);
@@ -29,5 +30,8 @@ router.use('/pods', authenticateToken, checkNamespace, podsRouter);
 
 // Routes pour les ressources k3s
 router.use('/k3s', authenticateToken, checkNamespace, k3sResourcesRouter);
+
+// Routes Podman
+router.use('/podman', podmanRoutes);
 
 module.exports = router;

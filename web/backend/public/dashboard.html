@@ -203,42 +203,29 @@
         // Fonction pour vérifier l'authentification
         async function checkAuth() {
             try {
-                console.log('Vérification de l\'authentification...');
                 const response = await fetch('/auth/check', {
                     credentials: 'include'
                 });
                 
                 if (!response.ok) {
-                    console.error('Erreur d\'authentification:', response.status);
                     throw new Error('Non authentifié');
                 }
                 
                 const data = await response.json();
-                console.log('Données d\'authentification:', data);
-                
-                // Vérifier si le token existe dans les cookies
                 const token = document.cookie
                     .split('; ')
                     .find(row => row.startsWith('token='))
                     ?.split('=')[1];
                     
-                console.log('Token trouvé:', token ? 'Oui' : 'Non');
-                
                 if (!token) {
-                    console.error('Token non trouvé dans les cookies');
                     throw new Error('Token non trouvé dans les cookies');
                 }
                 
-                // Mettre à jour le nom d'utilisateur
                 document.getElementById('username').textContent = data.user.username;
-                
-                // Stocker le token dans une variable globale pour un accès facile
                 window.authToken = token;
                 
                 return data;
             } catch (error) {
-                console.error('Erreur d\'authentification:', error);
-                // Rediriger vers la page de connexion
                 window.location.href = 'login.html';
                 throw error;
             }
@@ -276,28 +263,9 @@
             }
         }
 
-        // Fonction pour afficher les headers dans la console
-        function logRequestHeaders(url, method = 'GET') {
-            const token = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('token='))
-                ?.split('=')[1];
-
-            console.log('Headers pour la requête:', {
-                url,
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Auth-Token': token,
-                    'X-Request-Type': 'API'
-                }
-            });
-        }
-
         // Fonction utilitaire pour les requêtes API
         async function makeApiRequest(url, method = 'GET', data = null) {
             try {
-                // Utiliser le token stocké globalement
                 const token = window.authToken || document.cookie
                     .split('; ')
                     .find(row => row.startsWith('token='))
@@ -306,16 +274,6 @@
                 if (!token) {
                     throw new Error('Token non trouvé');
                 }
-
-                console.log('Making API request:', {
-                    url,
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Auth-Token': token,
-                        'X-Request-Type': 'API'
-                    }
-                });
 
                 const response = await fetch(url, {
                     method: method,
@@ -335,7 +293,6 @@
 
                 return await response.json();
             } catch (error) {
-                console.error('Erreur API:', error);
                 if (error.message.includes('Token non trouvé') || error.message.includes('Non authentifié')) {
                     window.location.href = 'login.html';
                 }
@@ -395,34 +352,25 @@
         }
 
         async function loadReleasesForNamespace() {
-            console.log('=== Début de loadReleasesForNamespace ===');
-            
             try {
                 const userData = await makeApiRequest('/auth/check');
-                console.log('Données utilisateur:', userData);
                 
                 if (!userData || !userData.user || !userData.user.username) {
-                    console.error('Données utilisateur invalides:', userData);
                     window.location.href = 'login.html';
                     return;
                 }
 
                 const namespace = userData.user.username.toLowerCase();
-                console.log('Namespace utilisé:', namespace);
-                
                 const deleteSelect = document.getElementById('deleteReleaseName');
                 const podSelector = document.getElementById('podSelector');
                 
                 deleteSelect.innerHTML = '';
                 podSelector.innerHTML = '';
                 
-                console.log(`Chargement des releases pour namespace: ${namespace}`);
                 const data = await makeApiRequest(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
-                console.log(`Releases trouvées:`, data);
                 
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
-                        console.log(`Ajout de la release: ${r.name}`);
                         const opt1 = document.createElement('option');
                         opt1.value = r.name;
                         opt1.textContent = r.name;
@@ -436,7 +384,6 @@
                     
                     await loadPodsForNamespace(namespace, podSelector);
                 } else {
-                    console.log('Aucune release trouvée');
                     const opt = document.createElement('option');
                     opt.value = '';
                     opt.textContent = 'Aucune release trouvée';
@@ -444,7 +391,6 @@
                     podSelector.appendChild(opt.cloneNode(true));
                 }
             } catch (e) {
-                console.error('Erreur lors du chargement des releases:', e);
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = 'Erreur lors du chargement';
@@ -455,9 +401,7 @@
 
         async function loadPodsForNamespace(namespace, podSelector) {
             try {
-                console.log(`Chargement des pods pour namespace: ${namespace}`);
                 const pods = await makeApiRequest(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
-                console.log(`Pods trouvés: ${pods.length}`);
                 
                 podSelector.innerHTML = '';
                 
@@ -468,7 +412,6 @@
                     podSelector.appendChild(defaultOpt);
                     
                     pods.forEach(pod => {
-                        console.log(`Pod: ${pod.name} (${pod.status})`);
                         const opt = document.createElement('option');
                         opt.value = pod.name;
                         opt.textContent = `${pod.name} (${pod.status})`;
@@ -486,7 +429,6 @@
                     podSelector.appendChild(opt);
                 }
             } catch (err) {
-                console.error('Erreur lors du chargement des pods:', err);
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = 'Erreur lors du chargement';
@@ -509,7 +451,20 @@
                     namespace: namespace
                 };
 
+                // Supprimer l'application
                 const result = await makeApiRequest('/undeploy', 'DELETE', data);
+                
+                // Supprimer l'image Podman
+                try {
+                    await makeApiRequest('/podman/delete-image', 'POST', {
+                        imageName: releaseName,
+                        namespace: namespace
+                    });
+                } catch (imageError) {
+                    console.error('Erreur lors de la suppression de l\'image:', imageError);
+                    // On continue même si la suppression de l'image échoue
+                }
+
                 displayResult(result, true);
                 await loadReleasesForNamespace();
             } catch (error) {
@@ -688,22 +643,15 @@
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
                 
-                console.log(`Chargement des stats pour pod: ${podName} dans namespace: ${namespace}`);
-                
                 const podsData = await makeApiRequest(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
-                console.log('Pods disponibles:', podsData.map(p => p.name).join(', '));
-                
                 const podData = podsData.find(p => p.name === podName);
                 
                 if (!podData) {
                     const partialMatch = podsData.find(p => p.name.includes(podName) || podName.includes(p.name));
                     if (partialMatch) {
-                        console.log(`Pod exact non trouvé, mais match partiel trouvé: ${partialMatch.name}`);
                         loadPodDetails(partialMatch, statsContainer);
                     } else {
-                        console.error(`Pod ${podName} non trouvé dans les données:`, podsData);
                         if (podsData.length > 0) {
-                            console.log(`Utilisation du premier pod disponible: ${podsData[0].name}`);
                             loadPodDetails(podsData[0], statsContainer);
                             
                             const options = document.getElementById('podSelector').options;
@@ -721,7 +669,6 @@
                     loadPodDetails(podData, statsContainer);
                 }
             } catch (err) {
-                console.error('Erreur lors du chargement des stats:', err);
                 statsContainer.classList.add('hidden');
                 const resultDiv = document.getElementById('result');
                 if (resultDiv) {
