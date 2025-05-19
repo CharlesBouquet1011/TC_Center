@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "37576c196088165f",
+        "id": "ea4ab3a84bc3677d",
         "type": "tabs",
         "children": [
           {
-            "id": "aefa7adc0d60412c",
+            "id": "bf8a29256e3dcf5a",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -168,10 +168,13 @@
       "command-palette:Ouvrir la palette de commandes": false
     }
   },
-  "active": "aefa7adc0d60412c",
+  "active": "bf8a29256e3dcf5a",
   "lastOpenFiles": [
-    "Configuration routeur.md",
     "Configuration routeur Cisco 881.md",
+    "admin/pistes_d'ameliorations.md",
+    "admin/kub.md",
+    "admin/configReseau.md",
+    "Configuration routeur.md",
     "utilisateur/Guide_utilisateur.md",
     "Structure.md",
     "utilisateur/Guide_helm.md",
