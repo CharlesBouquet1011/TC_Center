@@ -324,29 +324,43 @@
             isProcessing = true;
             setLoading('deployButton', 'deployLoading', true);
 
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            const data = {
-                gitlabUrl: document.getElementById('gitlabUrl').value,
-                gitlabToken: document.getElementById('gitlabToken').value,
-                branch: document.getElementById('branch').value,
-                namespace: namespace
-            };
-
             try {
+                // Vérifier l'authentification d'abord
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const userData = await authResponse.json();
+                const namespace = userData.user.username.toLowerCase();
+
+                const data = {
+                    gitlabUrl: document.getElementById('gitlabUrl').value,
+                    gitlabToken: document.getElementById('gitlabToken').value,
+                    branch: document.getElementById('branch').value,
+                    namespace: namespace
+                };
+
                 const response = await fetch('/deploy', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Auth-Token': document.cookie
+                            .split('; ')
+                            .find(row => row.startsWith('token='))
+                            ?.split('=')[1],
+                        'X-Request-Type': 'API'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
                 const result = await response.json();
                 displayResult(result, response.ok);
                 if (response.ok) {
-                    // Recharger les releases après un déploiement réussi
                     await loadReleasesForNamespace();
-
                 }
             } catch (error) {
                 displayResult({ error: error.message }, false);
@@ -491,28 +505,42 @@
             isProcessing = true;
             setLoading('deleteButton', 'deleteLoading', true);
 
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            const releaseName = document.getElementById('deleteReleaseName').value;
-
-            const data = {
-                releaseName: releaseName,
-                namespace: namespace
-            };
-
             try {
+                // Vérifier l'authentification d'abord
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const userData = await authResponse.json();
+                const namespace = userData.user.username.toLowerCase();
+                const releaseName = document.getElementById('deleteReleaseName').value;
+
+                const data = {
+                    releaseName: releaseName,
+                    namespace: namespace
+                };
+
                 const response = await fetch('/undeploy', {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Auth-Token': document.cookie
+                            .split('; ')
+                            .find(row => row.startsWith('token='))
+                            ?.split('=')[1],
+                        'X-Request-Type': 'API'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
                 const result = await response.json();
                 displayResult(result, response.ok);
                 
                 if (response.ok) {
-                    // Recharger les releases après suppression réussie
                     await loadReleasesForNamespace();
                 }
             } catch (error) {
@@ -534,122 +562,169 @@
         let term, ws;
         function openTerminal() {
             const podName = document.getElementById('podSelector').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            
-            if (!podName || !namespace) {
-                alert('Sélectionnez un pod');
-                return;
-            }
-            
-            if (term) {
-                term.dispose();
-            }
-            
-            term = new Terminal({
-                theme: { background: '#1a1a1a' },
-                fontSize: 14,
-                cursorBlink: true
-            });
-            
-            term.open(document.getElementById('terminal'));
-            term.write('Connexion au pod...\r\n');
-            
-            if (ws) ws.close();
-            
-            // Utiliser directement le nom complet du pod
-            ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`);
-            
-            ws.onopen = () => {
-                term.write('Terminal prêt.\r\n');
-                term.focus();
-            };
-            
-            ws.onmessage = (event) => {
-                term.write(event.data);
-            };
-            
-            ws.onclose = () => {
-                term.write('\r\n[Connexion fermée]');
-            };
-            
-            ws.onerror = (e) => {
-                term.write('\r\n[Erreur de connexion]');
-                console.error('Erreur WebSocket:', e);
-            };
-            
-            term.onData(data => {
-                if (ws && ws.readyState === 1) ws.send(data);
-            });
-        }
-
-        function downloadPodLogs() {
-            const podName = document.getElementById('podSelector').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            
-            if (!podName || !namespace) {
-                alert('Sélectionnez un pod');
-                return;
-            }
-            
-            // Utiliser directement le nom complet du pod
-            fetch(`/pods/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Erreur lors de la récupération des logs');
-                    return res.text();
-                })
-                .then(logs => {
-                    const blob = new Blob([logs], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `logs_${namespace}_${podName}.log`;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
-                })
-                .catch(err => {
-                    alert('Erreur : ' + err.message);
-                });
-        }
-
-        function downloadDescribeInfo() {
-            const podName = document.getElementById('podSelector').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
             
             if (!podName) {
                 alert('Sélectionnez un pod');
                 return;
             }
-            
-            // Le paramètre resourceName doit être le nom complet du pod
-            fetch(`/k3s/describe?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Erreur lors de la récupération de la description');
-                    return res.text();
-                })
-                .then(describe => {
-                    const blob = new Blob([describe], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `describe_pod_${podName}.txt`;
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
-                })
-                .catch(err => {
-                    alert('Erreur : ' + err.message);
-                    console.error('Erreur describe:', err);
+
+            // Vérifier l'authentification d'abord
+            fetch('/auth/check', {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Non authentifié');
+                }
+                return response.json();
+            })
+            .then(userData => {
+                const namespace = userData.user.username.toLowerCase();
+                
+                if (term) {
+                    term.dispose();
+                }
+                
+                term = new Terminal({
+                    theme: { background: '#1a1a1a' },
+                    fontSize: 14,
+                    cursorBlink: true
                 });
+                
+                term.open(document.getElementById('terminal'));
+                term.write('Connexion au pod...\r\n');
+                
+                if (ws) ws.close();
+                
+                ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`);
+                
+                ws.onopen = () => {
+                    term.write('Terminal prêt.\r\n');
+                    term.focus();
+                };
+                
+                ws.onmessage = (event) => {
+                    term.write(event.data);
+                };
+                
+                ws.onclose = () => {
+                    term.write('\r\n[Connexion fermée]');
+                };
+                
+                ws.onerror = (e) => {
+                    term.write('\r\n[Erreur de connexion]');
+                    console.error('Erreur WebSocket:', e);
+                };
+                
+                term.onData(data => {
+                    if (ws && ws.readyState === 1) ws.send(data);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur d\'authentification:', error);
+                window.location.href = 'login.html';
+            });
+        }
+
+        async function downloadPodLogs() {
+            const podName = document.getElementById('podSelector').value;
+            
+            if (!podName) {
+                alert('Sélectionnez un pod');
+                return;
+            }
+
+            try {
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const userData = await authResponse.json();
+                const namespace = userData.user.username.toLowerCase();
+                
+                const response = await fetch(`/pods/logs?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`, {
+                    credentials: 'include',
+                    headers: {
+                        'X-Auth-Token': document.cookie
+                            .split('; ')
+                            .find(row => row.startsWith('token='))
+                            ?.split('=')[1],
+                        'X-Request-Type': 'API'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur lors de la récupération des logs');
+                
+                const logs = await response.text();
+                const blob = new Blob([logs], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `logs_${namespace}_${podName}.log`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            } catch (err) {
+                alert('Erreur : ' + err.message);
+            }
+        }
+
+        async function downloadDescribeInfo() {
+            const podName = document.getElementById('podSelector').value;
+            
+            if (!podName) {
+                alert('Sélectionnez un pod');
+                return;
+            }
+
+            try {
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const userData = await authResponse.json();
+                const namespace = userData.user.username.toLowerCase();
+                
+                const response = await fetch(`/k3s/describe?resourceType=pod&resourceName=${encodeURIComponent(podName)}&namespace=${encodeURIComponent(namespace)}`, {
+                    credentials: 'include',
+                    headers: {
+                        'X-Auth-Token': document.cookie
+                            .split('; ')
+                            .find(row => row.startsWith('token='))
+                            ?.split('=')[1],
+                        'X-Request-Type': 'API'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur lors de la récupération de la description');
+                
+                const describe = await response.text();
+                const blob = new Blob([describe], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `describe_pod_${podName}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            } catch (err) {
+                alert('Erreur : ' + err.message);
+                console.error('Erreur describe:', err);
+            }
         }
 
         // Fonction pour charger les statistiques et ressources du pod
@@ -662,14 +737,30 @@
                 return;
             }
             
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
-            
             try {
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const userData = await authResponse.json();
+                const namespace = userData.user.username.toLowerCase();
+                
                 console.log(`Chargement des stats pour pod: ${podName} dans namespace: ${namespace}`);
                 
-                // Charger les infos détaillées du pod depuis la nouvelle API
-                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
+                const response = await fetch(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`, {
+                    credentials: 'include',
+                    headers: {
+                        'X-Auth-Token': document.cookie
+                            .split('; ')
+                            .find(row => row.startsWith('token='))
+                            ?.split('=')[1],
+                        'X-Request-Type': 'API'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
@@ -678,24 +769,19 @@
                 const podsData = await response.json();
                 console.log('Pods disponibles:', podsData.map(p => p.name).join(', '));
                 
-                // Vérifier si le pod existe dans les données
                 const podData = podsData.find(p => p.name === podName);
                 
                 if (!podData) {
-                    // Essayer un match partiel au cas où
                     const partialMatch = podsData.find(p => p.name.includes(podName) || podName.includes(p.name));
                     if (partialMatch) {
                         console.log(`Pod exact non trouvé, mais match partiel trouvé: ${partialMatch.name}`);
-                        // Utiliser le match partiel
                         loadPodDetails(partialMatch, statsContainer);
                     } else {
                         console.error(`Pod ${podName} non trouvé dans les données:`, podsData);
-                        // Si aucun pod n'est trouvé mais que des pods existent, utiliser le premier
                         if (podsData.length > 0) {
                             console.log(`Utilisation du premier pod disponible: ${podsData[0].name}`);
                             loadPodDetails(podsData[0], statsContainer);
                             
-                            // Mettre à jour le sélecteur pour refléter le pod utilisé
                             const options = document.getElementById('podSelector').options;
                             for (let i = 0; i < options.length; i++) {
                                 if (options[i].value === podsData[0].name) {
@@ -708,13 +794,11 @@
                         }
                     }
                 } else {
-                    // Pod trouvé, charger les détails
                     loadPodDetails(podData, statsContainer);
                 }
             } catch (err) {
                 console.error('Erreur lors du chargement des stats:', err);
                 statsContainer.classList.add('hidden');
-                // Afficher l'erreur dans l'UI pour aider au débogage
                 const resultDiv = document.getElementById('result');
                 if (resultDiv) {
                     resultDiv.innerHTML = `Erreur: ${err.message}`;
@@ -830,43 +914,57 @@
         }
 
         // Nouvelle fonction pour télécharger les informations d'IP
-        function downloadPodIP() {
+        async function downloadPodIP() {
             const podName = document.getElementById('podSelector').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            const namespace = user.username.toLowerCase();
             
             if (!podName) {
                 alert('Sélectionnez un pod');
                 return;
             }
             
-            fetch(`/pods/ip-info?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Erreur lors de la récupération des informations IP');
-                    return res.json();
-                })
-                .then(data => {
-                    // Créer un blob avec les données formatées
-                    const content = JSON.stringify(data, null, 2);
-                    const blob = new Blob([content], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Créer un lien de téléchargement
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `ip_info_${podName}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    // Nettoyer
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
-                })
-                .catch(err => {
-                    alert('Erreur : ' + err.message);
+            try {
+                const authResponse = await fetch('/auth/check', {
+                    credentials: 'include'
                 });
+                
+                if (!authResponse.ok) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const userData = await authResponse.json();
+                const namespace = userData.user.username.toLowerCase();
+                
+                const response = await fetch(`/pods/ip-info?namespace=${encodeURIComponent(namespace)}&podName=${encodeURIComponent(podName)}`, {
+                    credentials: 'include',
+                    headers: {
+                        'X-Auth-Token': document.cookie
+                            .split('; ')
+                            .find(row => row.startsWith('token='))
+                            ?.split('=')[1],
+                        'X-Request-Type': 'API'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur lors de la récupération des informations IP');
+                
+                const data = await response.json();
+                const content = JSON.stringify(data, null, 2);
+                const blob = new Blob([content], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ip_info_${podName}.json`;
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            } catch (err) {
+                alert('Erreur : ' + err.message);
+            }
         }
     </script>
 </body>
