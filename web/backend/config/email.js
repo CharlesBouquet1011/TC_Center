@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 
 // Debug: Afficher les variables d'environnement (sans le mot de passe)
 console.log('Configuration email:', {
@@ -12,8 +12,8 @@ console.log('Configuration email:', {
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     auth: {
-        user: "noreplytccenter@gmail.com",
-        pass: "yqyb sxmx bqhw dkoz"
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
     },
     tls: {
         rejectUnauthorized: false
