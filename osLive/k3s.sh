@@ -115,12 +115,12 @@ location = "134.214.202.221:5000"
 EOF
 
 mkdir -p /mnt/k3sVolume/podman/share/containers/
-chown -R user:user /mnt/k3sVolume/podman/share/containers/
+sudo chown -R user:user /mnt/k3sVolume/podman/share
 cat > /home/user/.config/containers/storage.conf <<EOF
 [storage]
   driver = "overlay"
   graphRoot = "/mnt/k3sVolume/podman/share/containers/storage"
-  runRoot = "${XDG_RUNTIME_DIR}/containers"
+  runRoot = "/run/user/containers"
 [storage.options]
   mount_program = "/usr/bin/fuse-overlayfs"
 EOF
