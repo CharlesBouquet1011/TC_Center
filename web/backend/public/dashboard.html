@@ -203,11 +203,13 @@
         // Fonction pour vérifier l'authentification
         async function checkAuth() {
             try {
+                console.log('Vérification de l\'authentification...');
                 const response = await fetch('/auth/check', {
                     credentials: 'include'
                 });
                 
                 if (!response.ok) {
+                    console.error('Erreur d\'authentification:', response.status);
                     throw new Error('Non authentifié');
                 }
                 
@@ -223,6 +225,7 @@
                 console.log('Token trouvé:', token ? 'Oui' : 'Non');
                 
                 if (!token) {
+                    console.error('Token non trouvé dans les cookies');
                     throw new Error('Token non trouvé dans les cookies');
                 }
                 
@@ -235,15 +238,21 @@
                 return data;
             } catch (error) {
                 console.error('Erreur d\'authentification:', error);
+                // Rediriger vers la page de connexion
                 window.location.href = 'login.html';
                 throw error;
             }
         }
 
         // Vérifier l'authentification au chargement de la page
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-            loadReleasesForNamespace();
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await checkAuth();
+                await loadReleasesForNamespace();
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation:', error);
+                window.location.href = 'login.html';
+            }
         });
 
         // Fonction pour la déconnexion
@@ -255,7 +264,12 @@
                 });
                 
                 if (response.ok) {
+                    // Supprimer le token stocké
+                    window.authToken = null;
+                    // Rediriger vers la page de connexion
                     window.location.href = 'login.html';
+                } else {
+                    console.error('Erreur lors de la déconnexion:', response.status);
                 }
             } catch (error) {
                 console.error('Erreur lors de la déconnexion:', error);
