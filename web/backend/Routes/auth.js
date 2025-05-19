@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const db = require('../db/init'); // ou le chemin correct vers ta base SQLite
 const authenticateToken = require('../middleware/authenticate');
 const { JWT_SECRET } = require('../utils/jwt');
+const { sendResetEmail } = require('../config/email');
 
 router.post('/register', (req, res) => {
     const { email, username, password } = req.body;
@@ -185,6 +187,149 @@ router.get('/check', authenticateToken, (req, res) => {
             username: req.user.username,
             email: req.user.email
         }
+    });
+});
+
+// Route pour demander la réinitialisation du mot de passe
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    console.log('Tentative de réinitialisation pour:', email);
+
+    if (!email) {
+        console.log('Email manquant');
+        return res.status(400).json({ message: 'Email requis' });
+    }
+
+    // Vérifier si l'email existe
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+        if (err) {
+            console.error('Erreur lors de la vérification de l\'email:', err);
+            return res.status(500).json({ message: 'Erreur lors de la vérification de l\'email' });
+        }
+
+        if (!user) {
+            console.log('Aucun utilisateur trouvé avec cet email');
+            // Pour des raisons de sécurité, on renvoie toujours un succès
+            return res.status(200).json({ message: 'Si votre email est enregistré, vous recevrez un lien de réinitialisation' });
+        }
+
+        console.log('Utilisateur trouvé:', user.id);
+
+        try {
+            // Générer un token de réinitialisation
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const resetTokenExpiry = Date.now() + 3600000; // 1 heure
+
+            console.log('Token généré:', resetToken);
+
+            // Vérifier si les colonnes existent
+            db.get("PRAGMA table_info(users)", [], (err, rows) => {
+                if (err) {
+                    console.error('Erreur lors de la vérification de la structure de la table:', err);
+                    return res.status(500).json({ message: 'Erreur lors de la vérification de la structure de la table' });
+                }
+                console.log('Structure de la table:', rows);
+            });
+
+            // Sauvegarder le token dans la base de données
+            const query = 'UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?';
+            console.log('Requête SQL:', query);
+            console.log('Paramètres:', [resetToken, resetTokenExpiry, user.id]);
+
+            db.run(query, [resetToken, resetTokenExpiry, user.id], async function(err) {
+                if (err) {
+                    console.error('Erreur lors de la sauvegarde du token:', err);
+                    console.error('Détails de l\'erreur:', err.message);
+                    return res.status(500).json({ 
+                        message: 'Erreur lors de la sauvegarde du token',
+                        details: err.message
+                    });
+                }
+
+                console.log('Token sauvegardé avec succès');
+                console.log('Nombre de lignes modifiées:', this.changes);
+
+                // Vérifier que le token a bien été sauvegardé
+                db.get('SELECT reset_token, reset_token_expiry FROM users WHERE id = ?', [user.id], (err, result) => {
+                    if (err) {
+                        console.error('Erreur lors de la vérification du token:', err);
+                    } else {
+                        console.log('Token sauvegardé dans la base:', result);
+                    }
+                });
+
+                // Envoyer l'email
+                const emailSent = await sendResetEmail(email, resetToken);
+                if (!emailSent) {
+                    console.error('Erreur lors de l\'envoi de l\'email');
+                    return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email' });
+                }
+
+                console.log('Email envoyé avec succès');
+                res.status(200).json({ message: 'Si votre email est enregistré, vous recevrez un lien de réinitialisation' });
+            });
+        } catch (error) {
+            console.error('Erreur inattendue:', error);
+            return res.status(500).json({ 
+                message: 'Erreur inattendue',
+                details: error.message
+            });
+        }
+    });
+});
+
+// Route pour réinitialiser le mot de passe
+router.post('/reset-password', async (req, res) => {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+        return res.status(400).json({ message: 'Token et mot de passe requis' });
+    }
+
+    // Vérifier le token et son expiration
+    db.get(
+        'SELECT * FROM users WHERE reset_token = ? AND reset_token_expiry > ?',
+        [token, Date.now()],
+        async (err, user) => {
+            if (err) {
+                return res.status(500).json({ message: 'Erreur lors de la vérification du token' });
+            }
+
+            if (!user) {
+                return res.status(400).json({ message: 'Token invalide ou expiré' });
+            }
+
+            // Hacher le nouveau mot de passe
+            bcrypt.hash(password, 10, (err, hashedPassword) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Erreur lors du hachage du mot de passe' });
+                }
+
+                // Mettre à jour le mot de passe et effacer le token
+                db.run(
+                    'UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?',
+                    [hashedPassword, user.id],
+                    (err) => {
+                        if (err) {
+                            return res.status(500).json({ message: 'Erreur lors de la mise à jour du mot de passe' });
+                        }
+
+                        res.status(200).json({ message: 'Mot de passe réinitialisé avec succès' });
+                    }
+                );
+            });
+        }
+    );
+});
+
+// Route temporaire pour vérifier les utilisateurs (à supprimer en production)
+router.get('/check-users', (req, res) => {
+    db.all('SELECT id, email, username FROM users', [], (err, rows) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des utilisateurs:', err);
+            return res.status(500).json({ message: 'Erreur lors de la récupération des utilisateurs' });
+        }
+        res.json(rows);
     });
 });
 
