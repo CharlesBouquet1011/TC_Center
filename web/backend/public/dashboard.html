@@ -333,16 +333,16 @@
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
 
-                const data = {
-                    gitlabUrl: document.getElementById('gitlabUrl').value,
-                    gitlabToken: document.getElementById('gitlabToken').value,
-                    branch: document.getElementById('branch').value,
-                    namespace: namespace
-                };
+            const data = {
+                gitlabUrl: document.getElementById('gitlabUrl').value,
+                gitlabToken: document.getElementById('gitlabToken').value,
+                branch: document.getElementById('branch').value,
+                namespace: namespace
+            };
 
                 const result = await makeApiRequest('/deploy', 'POST', data);
                 displayResult(result, true);
-                await loadReleasesForNamespace();
+                    await loadReleasesForNamespace();
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
@@ -361,12 +361,12 @@
                 }
 
                 const namespace = userData.user.username.toLowerCase();
-                const deleteSelect = document.getElementById('deleteReleaseName');
-                const podSelector = document.getElementById('podSelector');
-                
-                deleteSelect.innerHTML = '';
-                podSelector.innerHTML = '';
-                
+            const deleteSelect = document.getElementById('deleteReleaseName');
+            const podSelector = document.getElementById('podSelector');
+            
+            deleteSelect.innerHTML = '';
+            podSelector.innerHTML = '';
+            
                 const data = await makeApiRequest(`/k3s/releases?namespace=${encodeURIComponent(namespace)}`);
                 
                 if (Array.isArray(data) && data.length > 0) {
@@ -444,12 +444,12 @@
             try {
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
-                const releaseName = document.getElementById('deleteReleaseName').value;
+            const releaseName = document.getElementById('deleteReleaseName').value;
 
-                const data = {
-                    releaseName: releaseName,
-                    namespace: namespace
-                };
+            const data = {
+                releaseName: releaseName,
+                namespace: namespace
+            };
 
                 // Supprimer l'application
                 const result = await makeApiRequest('/undeploy', 'DELETE', data);
@@ -466,7 +466,7 @@
                 }
 
                 displayResult(result, true);
-                await loadReleasesForNamespace();
+                    await loadReleasesForNamespace();
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
@@ -504,44 +504,44 @@
             })
             .then(userData => {
                 const namespace = userData.user.username.toLowerCase();
-                
-                if (term) {
-                    term.dispose();
-                }
-                
-                term = new Terminal({
-                    theme: { background: '#1a1a1a' },
-                    fontSize: 14,
-                    cursorBlink: true
-                });
-                
-                term.open(document.getElementById('terminal'));
-                term.write('Connexion au pod...\r\n');
-                
-                if (ws) ws.close();
-                
-                ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`);
-                
-                ws.onopen = () => {
-                    term.write('Terminal prêt.\r\n');
-                    term.focus();
-                };
-                
-                ws.onmessage = (event) => {
-                    term.write(event.data);
-                };
-                
-                ws.onclose = () => {
-                    term.write('\r\n[Connexion fermée]');
-                };
-                
-                ws.onerror = (e) => {
-                    term.write('\r\n[Erreur de connexion]');
-                    console.error('Erreur WebSocket:', e);
-                };
-                
-                term.onData(data => {
-                    if (ws && ws.readyState === 1) ws.send(data);
+            
+            if (term) {
+                term.dispose();
+            }
+            
+            term = new Terminal({
+                theme: { background: '#1a1a1a' },
+                fontSize: 14,
+                cursorBlink: true
+            });
+            
+            term.open(document.getElementById('terminal'));
+            term.write('Connexion au pod...\r\n');
+            
+            if (ws) ws.close();
+            
+            ws = new WebSocket(`ws://${window.location.host}/ws/exec?namespace=${encodeURIComponent(namespace)}&release=${encodeURIComponent(podName)}`);
+            
+            ws.onopen = () => {
+                term.write('Terminal prêt.\r\n');
+                term.focus();
+            };
+            
+            ws.onmessage = (event) => {
+                term.write(event.data);
+            };
+            
+            ws.onclose = () => {
+                term.write('\r\n[Connexion fermée]');
+            };
+            
+            ws.onerror = (e) => {
+                term.write('\r\n[Erreur de connexion]');
+                console.error('Erreur WebSocket:', e);
+            };
+            
+            term.onData(data => {
+                if (ws && ws.readyState === 1) ws.send(data);
                 });
             })
             .catch(error => {
@@ -557,7 +557,7 @@
                 alert('Sélectionnez un pod');
                 return;
             }
-
+            
             try {
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
@@ -573,19 +573,19 @@
                 if (!response.ok) throw new Error('Erreur lors de la récupération des logs');
                 
                 const logs = await response.text();
-                const blob = new Blob([logs], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `logs_${namespace}_${podName}.log`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+                    const blob = new Blob([logs], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `logs_${namespace}_${podName}.log`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
             } catch (err) {
-                alert('Erreur : ' + err.message);
+                    alert('Erreur : ' + err.message);
             }
         }
 
@@ -596,7 +596,7 @@
                 alert('Sélectionnez un pod');
                 return;
             }
-
+            
             try {
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
@@ -612,20 +612,20 @@
                 if (!response.ok) throw new Error('Erreur lors de la récupération de la description');
                 
                 const describe = await response.text();
-                const blob = new Blob([describe], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `describe_pod_${podName}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+                    const blob = new Blob([describe], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `describe_pod_${podName}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
             } catch (err) {
-                alert('Erreur : ' + err.message);
-                console.error('Erreur describe:', err);
+                    alert('Erreur : ' + err.message);
+                    console.error('Erreur describe:', err);
             }
         }
 
@@ -642,7 +642,7 @@
             try {
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
-                
+            
                 const podsData = await makeApiRequest(`/k3s/resources?namespace=${encodeURIComponent(namespace)}`);
                 const podData = podsData.find(p => p.name === podName);
                 
@@ -808,22 +808,22 @@
                 if (!response.ok) throw new Error('Erreur lors de la récupération des informations IP');
                 
                 const data = await response.json();
-                const content = JSON.stringify(data, null, 2);
-                const blob = new Blob([content], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `ip_info_${podName}.json`;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+                    const content = JSON.stringify(data, null, 2);
+                    const blob = new Blob([content], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ip_info_${podName}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
             } catch (err) {
-                alert('Erreur : ' + err.message);
+                    alert('Erreur : ' + err.message);
             }
         }
     </script>
