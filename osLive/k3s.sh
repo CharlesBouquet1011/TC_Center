@@ -103,11 +103,9 @@ if [ "$ROLE" = "master" ]; then
 mkdir -p /home/user/.config/containers/
 cat > /home/user/.config/containers/registries.conf <<EOF
 unqualified-search-registries = ["docker.io"]
-
 [[registry]]
 prefix = "docker.io"
 location = "docker.io"
-
 [[registry]]
 prefix = "134.214.202.221:5000"
 insecure = true
@@ -115,18 +113,17 @@ location = "134.214.202.221:5000"
 EOF
 
 mkdir -p /mnt/k3sVolume/podman/share/containers/
-chown -R user:user /mnt/k3sVolume/podman/share/containers/
+sudo chown -R user:user /mnt/k3sVolume/podman/share
 cat > /home/user/.config/containers/storage.conf <<EOF
 [storage]
-  driver = "overlay"
-  graphRoot = "/mnt/k3sVolume/podman/share/containers/storage"
-  runRoot = "${XDG_RUNTIME_DIR}/containers"
-[storage.options]
-  mount_program = "/usr/bin/fuse-overlayfs"
+driver = "vfs"
+graphroot = "/home/user/.local/share/containers/storage"
+runroot = "/run/user/1000/containers"
 EOF
-
+sudo chown -R user:user /mnt/k3sVolume #patch normalement
 while [ "$(stat -c '%U:%G' /home/user/.config)" != "user:user" ]; do
   echo "Le dossier n'est pas encore à user:user, tentative de correction..."
   sudo chown -R user:user /home/user/.config
   sleep 1
 done
+
