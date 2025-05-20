@@ -51,7 +51,6 @@ Vous devez créer un **token d'accès personnel de type Developer pas Guest** af
 - Donnez-lui un nom explicite (par exemple : `deploy-token-datacenter`)
 - Copiez le token : vous ne pourrez plus le voir après validation
 
-
 ---
 
 ### Étape 2 — Renseigner l’URL et le token sur notre plateforme
@@ -63,13 +62,16 @@ Une fois connecte a votre compte vous aurez acces a une page de dépot ou vous p
   https://gitlab.com/votre-projet/mon-app.git
   ```
 - Collez votre token d'acces au dépôt
+
 ---
 
-
 ### Étape 3 — Validez la soumission de votre application
+
 Une fois le déploiement fini vous verrez un message s'afficher en bas de page:
+
 - Un message d'erreur si le déploiement a echoué. Dans ce cas il faudra de votre côté corriger le probleme avant de retenter un déploiement.
 - Un message de confirmation signifiant que le déploiement s'est déroulé sans erreurs.
+
 
 ## 5. Ouvrir un terminal dans votre pod
 
@@ -116,9 +118,10 @@ Plusieurs options sont disponibles pour diagnostiquer vos applications :
 ## 7. Supprimer une application
 
 Si vous souhaitez arrêter d’héberger une application :
+
 1. Accédez à l’onglet de suppression.
 2. Validez la suppression.
 
-L’application sera alors supprimée de votre namespace et ne consommera plus de ressources.
+L’application sera alors supprimée de votre namespace et ne consommera plus de ressources. L'image de votre application sera aussi suprimée.
 
 ---
