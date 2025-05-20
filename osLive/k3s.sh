@@ -119,9 +119,11 @@ sudo chown -R user:user /mnt/k3sVolume/podman/share
 
 cat > /home/user/.config/containers/storage.conf <<EOF
 [storage]
-driver = "vfs"
+driver = "overlay"
 graphroot = "/mnt/k3sVolume/podman"
 runroot = "/run/user/1000/containers"
+[storage.options]
+mount_program = "/usr/bin/fuse-overlayfs"
 EOF
 sudo chown -R user:user /mnt/k3sVolume #patch normalement
 while [ "$(stat -c '%U:%G' /home/user/.config)" != "user:user" ]; do
