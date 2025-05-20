@@ -38,14 +38,14 @@ echo "Docker installation complete and configured to use /mnt/k3sVolume/docker a
 # Configure Podman
 sudo apt-get install -y podman fuse-overlayfs
 
-sudo mkdir -p /mnt/k3sVolume/podman
+sudo mkdir -p /mnt/k3sVolume/podmanRoot
 sudo mkdir -p /etc/containers
 
 # Write the Podman storage configuration
 sudo tee /etc/containers/storage.conf > /dev/null <<EOF
 [storage]
   driver = "overlay"
-  graphRoot = "/mnt/k3sVolume/podman"
+  graphRoot = "/mnt/k3sVolume/podmanRoot"
   runRoot = "/run/containers"
 [storage.options]
   mount_program = "/usr/bin/fuse-overlayfs"
