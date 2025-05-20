@@ -120,9 +120,9 @@ router.post('/register', (req, res) => {
 
                 // Définir le cookie avec le token
                 res.cookie('token', token, {
-                  httpOnly: true,
+                  httpOnly: false, // Permettre l'accès via JavaScript
                   secure: process.env.NODE_ENV === 'production', // true en production
-                  sameSite: 'strict',
+                  sameSite: 'lax', // Plus permissif que 'strict'
                   maxAge: 24 * 60 * 60 * 1000 // 24 heures
                 });
 
