@@ -122,6 +122,6 @@ Si vous souhaitez arrêter d’héberger une application :
 1. Accédez à l’onglet de suppression.
 2. Validez la suppression.
 
-L’application sera alors supprimée de votre namespace et ne consommera plus de ressources.
+L’application sera alors supprimée de votre namespace et ne consommera plus de ressources. L'image de votre application sera aussi suprimée.
 
 ---
