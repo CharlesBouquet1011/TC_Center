@@ -120,7 +120,7 @@ sudo chown -R user:user /mnt/k3sVolume/podman/share
 cat > /home/user/.config/containers/storage.conf <<EOF
 [storage]
 driver = "vfs"
-graphroot = "/mnt/k3sVolume/podman/share/containers//storage"
+graphroot = "/mnt/k3sVolume/podman"
 runroot = "/run/user/1000/containers"
 EOF
 sudo chown -R user:user /mnt/k3sVolume #patch normalement
