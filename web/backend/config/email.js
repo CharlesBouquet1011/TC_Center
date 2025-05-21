@@ -40,7 +40,7 @@ async function sendVerificationEmail(email, token) {
         console.log('Tentative d\'envoi d\'email de vérification à:', email);
         
         // Utiliser l'URL du backend pour la vérification
-        const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
         console.log('Lien de vérification généré:', verificationLink);
         
         const mailOptions = {
