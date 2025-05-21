@@ -1,5 +1,5 @@
 # Déployer une application sur TC Center
-
+[Exemple d'application préte à être déployée après être clonée](https://gitlab.insa-lyon.fr/gvantourou/bob)
 ## 1. Préparer une application fonctionnelle et conteneurisée
 
 Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
