@@ -54,7 +54,7 @@ kubectl apply -f /mnt/k3sVolume/otel-collector.yaml
 ```
 
 
-# pistes d'améliorations:
+# Pistes d'améliorations:
 Utilisation de Argo CD pour monitoring + pipelines de déploiement
 
 Lens pour regarder les objets.

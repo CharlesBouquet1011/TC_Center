@@ -1,4 +1,4 @@
-# build l'os utilisé dans la clé
+# Build l'os utilisé dans la clé
 L'os est la partie fondamentale du projet, il arrive avec k3s, podman, longhorn et helm déjà configurés (et monte également le volume persistant /dev/sda sur /mnt/k3sVolume) (attention, il faut avoir le disque lisible par linux)
 
 pour build la clé, il faut mettre les fichiers "hosts", "authorized_keys" et "registries.yaml" dans le dossier osLive puis mkdir un dossier live dans le dossier osLive et enfin executer `sudo ../config.sfr` et `yes | sudo lb build`.
@@ -37,7 +37,7 @@ configs: #si authentification
 ```
 
 
-# explication des fichiers d'os bootable 
+# Explication des fichiers d'os bootable 
 - **config.sfr**: configure les différentes dépendances apt, mets les fichiers de config aux bons endroits dans l'os etc
 - **ask.service**, enable_ask_service: lancent k3s.sh (j'avais besoin d'un shell intéractif au boot)
 - **enable ssh.chroot**: active le ssh
