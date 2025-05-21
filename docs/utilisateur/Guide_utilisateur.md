@@ -5,7 +5,7 @@
 Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
 > ⚠️ TC Center ne prend pas en charge la résolution de problèmes liés à votre code.
 
-Pour pouvoir accéder a votre code il faut qu'il soit déposé sur github ou sur gitlab (dans un dépôt public ou privé selon votre préférence).
+Pour pouvoir accéder a votre code il faut qu'il soit déposé sur gitlab (dans un dépôt public ou privé selon votre préférence).
 
 Une fois votre application testée et stable, vous devez la **conteneuriser**.  
 Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
