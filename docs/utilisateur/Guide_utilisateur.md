@@ -24,7 +24,7 @@ Cela inclut :
 
 ## 3. Accéder à la plateforme TC Center
 
-Rendez-vous sur [tc.insa-lyon.fr](https://tc.insa-lyon.fr).
+Rendez-vous sur (mettre l'ip du master ici).
 
 - Si vous êtes nouveau, créez un compte.
 - Sinon, connectez-vous avec vos identifiants.
