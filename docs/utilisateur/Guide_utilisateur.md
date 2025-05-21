@@ -29,10 +29,6 @@ Rendez-vous sur (mettre l'ip du master ici).
 - Si vous êtes nouveau, créez un compte.
 - Sinon, connectez-vous avec vos identifiants.
 
-Une fois connecté, vous pourrez :
-- Déployer vos applications dans un **namespace** associé à votre compte
-- Suivre vos déploiements à l’aide de leur **release name** (nom unique pour chaque application, défini dans le helm chart)
-- Supprimer une application à partir de sa release name.
 
 ## 4. Déployer une application
 
