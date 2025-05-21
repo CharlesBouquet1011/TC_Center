@@ -29,6 +29,7 @@ authorized_keys
 /osLive/hosts
 registries.yaml
 .env
+/frontend
 
 # Database
-web/backend/users.db
+web/backend/db/database.db

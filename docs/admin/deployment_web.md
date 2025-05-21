@@ -1,17 +1,16 @@
 # Guide de Déploiement de TC Center
 
-Ce guide décrit les étapes nécessaires pour déployer l'application TC Center sur un serveur.
+Ce guide décrit les étapes nécessaires pour déployer l'application TC Center sur le masterr.
 
 ## Prérequis
 
 - Node.js et npm installés
 - Python installé
 - Build-essential installé
-- Accès au serveur master (contrainte technique)
 
 ## Installation
 
-1. Cloner le dépôt GitHub :
+1. Cloner le dépôt GitHub, il est normallement déjà cloné dans mnt/k3sVolume/TC_Center:
 ```bash
 git clone <url_du_repo>
 cd TC_Center
@@ -35,12 +34,4 @@ http://<ip_serveur>:3000
 
 - L'application doit être déployée sur le serveur master en raison de contraintes techniques
 - Assurez-vous que le port 3000 est accessible sur le serveur
-- Les logs de l'application sont disponibles dans le dossier `logs`
 
-## Dépannage
-
-Si vous rencontrez des problèmes lors du déploiement :
-
-1. Vérifiez que tous les prérequis sont installés
-2. Assurez-vous d'être sur le serveur master
-3. Vérifiez les logs pour plus de détails sur les erreurs potentielles 
