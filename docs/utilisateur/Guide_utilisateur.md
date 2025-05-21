@@ -1,5 +1,5 @@
 # Déployer une application sur TC Center
-
+[Exemple d'application préte à être déployée après être clonée](https://gitlab.insa-lyon.fr/gvantourou/bob)
 ## 1. Préparer une application fonctionnelle et conteneurisée
 
 Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
@@ -24,15 +24,11 @@ Cela inclut :
 
 ## 3. Accéder à la plateforme TC Center
 
-Rendez-vous sur [tc.insa-lyon.fr](https://tc.insa-lyon.fr).
+Rendez-vous sur (mettre l'ip du master ici).
 
 - Si vous êtes nouveau, créez un compte.
 - Sinon, connectez-vous avec vos identifiants.
 
-Une fois connecté, vous pourrez :
-- Déployer vos applications dans un **namespace** associé à votre compte
-- Suivre vos déploiements à l’aide de leur **release name** (nom unique pour chaque application, défini dans le helm chart)
-- Supprimer une application à partir de sa release name.
 
 ## 4. Déployer une application
 

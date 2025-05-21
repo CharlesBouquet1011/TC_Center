@@ -112,13 +112,18 @@ insecure = true
 location = "134.214.202.221:5000"
 EOF
 
-mkdir -p /mnt/k3sVolume/podman/share/containers/
+sudo mkdir -p /mnt/k3sVolume/podman/share/containers/storage
+sudo chown -R user:user /mnt/k3sVolume/podman/share/containers
+
 sudo chown -R user:user /mnt/k3sVolume/podman/share
+
 cat > /home/user/.config/containers/storage.conf <<EOF
 [storage]
-driver = "vfs"
-graphroot = "/home/user/.local/share/containers/storage"
+driver = "overlay"
+graphroot = "/mnt/k3sVolume/podman"
 runroot = "/run/user/1000/containers"
+[storage.options]
+mount_program = "/usr/bin/fuse-overlayfs"
 EOF
 sudo chown -R user:user /mnt/k3sVolume #patch normalement
 while [ "$(stat -c '%U:%G' /home/user/.config)" != "user:user" ]; do
@@ -127,3 +132,4 @@ while [ "$(stat -c '%U:%G' /home/user/.config)" != "user:user" ]; do
   sleep 1
 done
 
+podman system reset

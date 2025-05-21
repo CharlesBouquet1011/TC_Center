@@ -6,141 +6,184 @@ const crypto = require('crypto');
 const db = require('../db/init'); // ou le chemin correct vers ta base SQLite
 const authenticateToken = require('../middleware/authenticate');
 const { JWT_SECRET } = require('../utils/jwt');
-const { sendResetEmail } = require('../config/email');
+const { sendResetEmail, sendVerificationEmail } = require('../config/email');
 
-router.post('/register', (req, res) => {
+// Enregistrement d'un nouvel utilisateur
+router.post('/register', async (req, res) => {
     const { email, username, password } = req.body;
     console.log('Tentative d\'inscription pour:', { email, username });
-  
-    if (!email || !username || !password) {
-      console.log('Champs manquants:', { email: !!email, username: !!username, password: !!password });
-      return res.status(400).json({ message: 'Tous les champs sont requis' });
-    }
-  
-    // Vérifier si l'email ou le username est déjà utilisé
-    db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], (err, row) => {
-      if (err) {
-        console.error('Erreur lors de la vérification des identifiants:', err);
-        return res.status(500).json({ message: 'Erreur lors de la vérification des identifiants' });
-      }
-  
-      if (row) {
-        console.log('Utilisateur existant trouvé:', row);
-        if (row.email === email) {
-          return res.status(400).json({ message: 'Cet email est déjà utilisé' });
-        } else {
-          return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
-        }
-      }
-  
-      // Hacher le mot de passe avant de l'enregistrer
-      bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-          console.error('Erreur lors du hachage du mot de passe:', err);
-          return res.status(500).json({ message: 'Erreur lors du hachage du mot de passe' });
-        }
-  
-        console.log('Mot de passe haché avec succès');
-  
-        // Ajouter le nouvel utilisateur avec le mot de passe haché
-        db.run(
-          'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-          [username, email, hashedPassword],
-          function(err) {
-            if (err) {
-              console.error('Erreur lors de l\'insertion dans la base de données:', err);
-              return res.status(500).json({ message: 'Erreur lors de l\'inscription' });
-            }
-            console.log('Utilisateur créé avec succès, ID:', this.lastID);
-            res.status(201).json({ message: 'Inscription réussie' });
-          }
-        );
-      });
-    });
-  });
-  
-  // Route pour la connexion
-  router.post('/login', (req, res) => {
-    const { identifier, password } = req.body;
-  
-    if (!identifier || !password) {
-      return res.status(400).json({ message: 'Identifiants requis' });
-    }
-  
-    // Vérifier si l'utilisateur existe (par email ou username)
-    db.get(
-      'SELECT * FROM users WHERE email = ? OR username = ?',
-      [identifier, identifier],
-      (err, row) => {
-        if (err) {
-          return res.status(500).json({ message: 'Erreur lors de la connexion' });
-        }
-  
-        if (!row) {
-          return res.status(401).json({ message: 'Identifiants incorrects' });
-        }
-  
-        // Vérifier le mot de passe haché
-        bcrypt.compare(password, row.password, (err, isMatch) => {
-          if (err) {
-            return res.status(500).json({ message: 'Erreur lors de la vérification du mot de passe' });
-          }
-  
-          if (!isMatch) {
-            return res.status(401).json({ message: 'Identifiants incorrects' });
-          }
 
-          // Créer un token JWT
-          const token = jwt.sign(
-            { 
-              id: row.id,
-              username: row.username,
-              email: row.email,
-              createdAt: new Date().toISOString()
-            },
+    if (!email || !username || !password) {
+        console.log('Champs manquants:', { email: !!email, username: !!username, password: !!password });
+        return res.status(400).json({ message: 'Tous les champs sont requis' });
+    }
+
+    try {
+        // Vérifier si l'email ou le username est déjà utilisé
+        const existingUser = await new Promise((resolve, reject) => {
+            db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], (err, row) => {
+                if (err) reject(err);
+                resolve(row);
+            });
+        });
+
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+            } else {
+                return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà utilisé' });
+            }
+        }
+
+        // Hacher le mot de passe
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Générer le token de vérification
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+
+        // Insérer le nouvel utilisateur
+        const result = await new Promise((resolve, reject) => {
+            db.run(
+                'INSERT INTO users (username, email, password, verification_token, is_verified) VALUES (?, ?, ?, ?, 0)',
+                [username, email, hashedPassword, verificationToken],
+                function(err) {
+                    if (err) reject(err);
+                    resolve(this.lastID);
+                }
+            );
+        });
+
+        // Envoyer l'email de vérification
+        const emailSent = await sendVerificationEmail(email, verificationToken);
+        if (!emailSent) {
+            return res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email de vérification' });
+        }
+
+        res.status(201).json({ message: 'Inscription réussie. Veuillez vérifier votre email.' });
+    } catch (error) {
+        console.error('Erreur lors de l\'inscription:', error);
+        res.status(500).json({ message: 'Erreur lors de l\'inscription' });
+    }
+});
+
+// Connexion utilisateur
+router.post('/login', async (req, res) => {
+    const { identifier, password } = req.body;
+
+    if (!identifier || !password) {
+        return res.status(400).json({ message: 'Identifiants requis' });
+    }
+
+    try {
+        // Vérifier si l'utilisateur existe
+        const user = await new Promise((resolve, reject) => {
+            db.get('SELECT * FROM users WHERE email = ? OR username = ?', [identifier, identifier], (err, row) => {
+                if (err) reject(err);
+                resolve(row);
+            });
+        });
+
+        if (!user) {
+            return res.status(401).json({ message: 'Identifiants incorrects' });
+        }
+
+        // Vérifier si l'email est vérifié
+        if (!user.is_verified) {
+            return res.status(403).json({ message: 'Veuillez vérifier votre adresse email avant de vous connecter.' });
+        }
+
+        // Vérifier le mot de passe
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Identifiants incorrects' });
+        }
+
+        // Créer le token JWT
+        const token = jwt.sign(
+            { id: user.id, username: user.username, email: user.email },
             JWT_SECRET,
             { expiresIn: '24h' }
-          );
+        );
 
-          // Supprimer les anciennes sessions
-          db.run('DELETE FROM sessions WHERE user_id = ?', [row.id], (err) => {
-            if (err) {
-              console.error('Erreur lors de la suppression des anciennes sessions:', err);
-            }
-
-            // Créer une nouvelle session avec le username
-            db.run(
-              'INSERT INTO sessions (user_id, token, username) VALUES (?, ?, ?)',
-              [row.id, token, row.username],
-              (err) => {
-                if (err) {
-                  console.error('Erreur lors de l\'enregistrement de la session:', err);
-                  return res.status(500).json({ message: 'Erreur lors de la création de la session' });
-                }
-
-                // Définir le cookie avec le token
-                res.cookie('token', token, {
-                  httpOnly: false, // Permettre l'accès via JavaScript
-                  secure: process.env.NODE_ENV === 'production', // true en production
-                  sameSite: 'lax', // Plus permissif que 'strict'
-                  maxAge: 24 * 60 * 60 * 1000 // 24 heures
-                });
-
-                res.status(200).json({
-                  message: 'Connexion réussie',
-                  user: {
-                    id: row.id,
-                    email: row.email,
-                    username: row.username
-                  }
-                });
-              }
-            );
-          });
+        // Mettre à jour la session
+        await new Promise((resolve, reject) => {
+            db.run('DELETE FROM sessions WHERE user_id = ?', [user.id], (err) => {
+                if (err) reject(err);
+                db.run(
+                    'INSERT INTO sessions (user_id, token, username) VALUES (?, ?, ?)',
+                    [user.id, token, user.username],
+                    (err) => {
+                        if (err) reject(err);
+                        resolve();
+                    }
+                );
+            });
         });
-      }
-    );
-  });
+
+        // Définir le cookie
+        res.cookie('token', token, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 86400000
+        });
+
+        res.status(200).json({
+            message: 'Connexion réussie',
+            user: { id: user.id, email: user.email, username: user.username }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la connexion:', error);
+        res.status(500).json({ message: 'Erreur lors de la connexion' });
+    }
+});
+
+// Vérification de l'email
+router.get('/verify-email', async (req, res) => {
+    const { token } = req.query;
+    console.log('Tentative de vérification avec le token:', token);
+
+    if (!token) {
+        console.log('Token manquant');
+        return res.status(400).json({ message: 'Token manquant' });
+    }
+
+    try {
+        // Vérifier le token
+        const user = await new Promise((resolve, reject) => {
+            db.get('SELECT id FROM users WHERE verification_token = ?', [token], (err, row) => {
+                if (err) reject(err);
+                resolve(row);
+            });
+        });
+
+        if (!user) {
+            console.log('Token invalide ou expiré');
+            return res.status(400).json({ message: 'Lien invalide ou expiré' });
+        }
+
+        // Mettre à jour le statut de vérification
+        await new Promise((resolve, reject) => {
+            db.run(
+                'UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?',
+                [user.id],
+                (err) => {
+                    if (err) reject(err);
+                    resolve();
+                }
+            );
+        });
+
+        console.log('Email vérifié avec succès pour l\'utilisateur:', user.id);
+        res.status(200).json({ message: 'Adresse email vérifiée avec succès !' });
+    } catch (error) {
+        console.error('Erreur lors de la vérification de l\'email:', error);
+        res.status(500).json({ message: 'Erreur lors de la vérification de l\'email' });
+    }
+});
+
+// Export du routeur
+module.exports = router;
 
 router.post('/logout', authenticateToken, (req, res) => {
     const token = req.cookies.token;
