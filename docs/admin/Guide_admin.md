@@ -4,16 +4,14 @@ Ce guide fournit une vue d’ensemble sur les étapes et composants nécessaires
 
 ---
 
-## ordre des actions pour la configuration:
+## Ordre des actions pour la configuration:
 - build l'os bootable avec les fichiers requis, (cf partie configuration)
 - faire une clé bootable pour chaque PC et l'insérer dans chaque (cf partie boot)
 - boot le PC master (prendre node01 par convention) et lui donner les infos dont il a besoin, cf partie boot
 - boot les PC agents et les connecter sur l'IP du master, cf partie boot
 
-**A ce niveau, le cluster fonctionne**, il faut maintenant lancer le serveur web pour que les utilisateurs puissent déployer leurs applications:
-- 1
-- 2
-- 3 
+**A ce niveau, le cluster fonctionne**, il faut maintenant lancer le serveur web pour que les utilisateurs puissent déployer leurs applications, cf [deployement_web.md](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/deployement_web.md)
+
 
 
 
@@ -42,7 +40,7 @@ Cette partie détaille la création d’une **clé bootable** avec une image Deb
 [📄 Consulter le guide de création de clé bootable](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/build_os_bootable.md)
 
 ---
-## le boot
+## Le boot
 
 Cette partie détaille les paramètres à donner aux pc lors de leur boot.
 [📄 Consulter le guide du boot](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/boot.md)
