@@ -8,7 +8,9 @@
 - suppression automatique des images non utilisées
 
 ## Site utilisateur:
-
+- mise en place de graphes pour voir les ressources utiliser
+- faire une page pour voir tout les pods actif pour pouvoir une vue global
+- mettre en place un lamdba
 
 ## Monitoring et paiement:
 - faire un FaaS
