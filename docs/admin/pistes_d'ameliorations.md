@@ -10,7 +10,7 @@ Ce fichier représente la liste des choses que l'on aurait aimé mettre mais que
 
 ## Domaine et certificat:
 - Avoir un domaine wildcard et générer des noms de domaine automatiquement pour chaque projet
-- avoir un certificat SSL wildcard pour pas s'ennuyer et avoir un renouvellement auto
+- Avoir un certificat SSL wildcard pour pas s'ennuyer et avoir un renouvellement auto
 (Mathis avait fait mais il manque le domaine)
 
 ## Helm
@@ -18,10 +18,10 @@ Ce fichier représente la liste des choses que l'on aurait aimé mettre mais que
 - Génération automatique du template des ingress à partir de quelques infos et du sous domaine qu'on génère dessus (à partir du domaine wildcard)
 
 ## Site utilisateur:
-- mise en place de graphes pour voir les ressources utiliser
-- faire une page pour voir tout les pods actif pour pouvoir une vue global
-- mettre en place un lamdba
+- Mise en place de graphes pour voir les ressources utiliser
+- Faire une page pour voir tous les pods actif pour pouvoir une vue globale
+- Mettre en place un lamdba
 
 ## Monitoring et paiement:
-- faire un FaaS
-- utiliser une plateforme de paiement ?
+- Faire un FaaS
+- Utiliser une plateforme de paiement
