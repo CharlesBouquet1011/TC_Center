@@ -16,12 +16,14 @@ Ce fichier représente la liste des choses que l'on aurait aimé mettre mais que
 ## Helm
 - Génération automatique des helms à partir de quelques informations données par l'utilisateur (pas si dur en utilisant judicieusement les values.yaml et les templates)
 - Génération automatique du template des ingress à partir de quelques infos et du sous domaine qu'on génère dessus (à partir du domaine wildcard)
+- Générer automatiquement le Helm pour les utilisateurs (surtout pour les applications simple)
 
 ## Site utilisateur:
 - Mise en place de graphes pour voir les ressources utiliser
 - Faire une page pour voir tous les pods actif pour pouvoir une vue globale
 - Mettre en place un lamdba
+- Utiliser les identifiants Insa à la place de notre registry
 
 ## Monitoring et paiement:
-- Faire un FaaS
 - Utiliser une plateforme de paiement
+- Mettre en place la méthode bezzos
