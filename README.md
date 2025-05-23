@@ -3,6 +3,8 @@
 ## Contexte et Objectifs
 Avec l’essor des applications cloud et des services numériques, il devient essentiel d’analyser en profondeur les infrastructures actuelles. L’hébergement de ces applications au sein d’un datacenter présente des enjeux importants, notamment en matière d’efficacité énergétique, de gestion des ressources et de configuration réseau. Ce projet a pour ambition d’explorer les solutions existantes en s’intéressant particulièrement à la consommation énergétique, à l’évaluation des performances, à l’allocation des ressources ainsi qu’à la connectivité au sein du cluster.
 
+L'objectif du projet est de fournir une interface simple ainsi qu'un fonctionnement autonome pour l'hébergement d'application. L'idée est de proposer une infrastructure Kuberenetes dans laquelle un utilisateur peut déployer une application contenerisée. 
+
 ## Matériel 
 + 3x PC
 + 2x Lame
@@ -10,7 +12,7 @@ Avec l’essor des applications cloud et des services numériques, il devient es
 ## Documentation
 Dans le dossier `docs` de ce dépôt Git, vous trouverez deux sections distinctes :
 
-- **Section utilisateur** : destinée aux développeurs souhaitant héberger une ou plusieurs applications sur notre datacenter.  
+- **Section utilisateur** : destinée aux développeurs souhaitant héberger une application sur le datacentre.  
   Elle fournit un guide complet, depuis les bonnes pratiques de développement jusqu’à l’obtention d’un hébergement fonctionnel sur notre infrastructure.
   [Guide_utilisateur](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/utilisateur/Guide_utilisateur.md)
 
