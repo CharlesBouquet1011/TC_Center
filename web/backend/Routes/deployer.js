@@ -166,7 +166,7 @@ appVersion: "1.0.0"`;
     
     fs.writeFileSync(path.join(chartDir, 'Chart.yaml'), chartYaml);
     
-    // Créer values.yaml avec configuration Longhorn
+    // Créer values.yaml
     const valuesYaml = `replicaCount: 1
 image:
   repository: ${imageName}
@@ -184,16 +184,11 @@ resources:
     memory: 512Mi
   requests:
     cpu: 250m
-    memory: 256Mi
-persistence:
-  enabled: true
-  storageClass: "longhorn"
-  size: 1Gi
-  accessMode: ReadWriteOnce`;
+    memory: 256Mi`;
     
     fs.writeFileSync(path.join(chartDir, 'values.yaml'), valuesYaml);
     
-    // Créer templates/deployment.yaml avec configuration des volumes
+    // Créer templates/deployment.yaml
     const deploymentYaml = `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -217,34 +212,10 @@ spec:
           ports:
 ${exposedPorts.map(port => `            - containerPort: ${port}`).join('\n')}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: app-data
-              mountPath: /app/data
-      volumes:
-        - name: app-data
-          persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-data`;
+            {{- toYaml .Values.resources | nindent 12 }}`;
     
     fs.mkdirSync(path.join(chartDir, 'templates'), { recursive: true });
     fs.writeFileSync(path.join(chartDir, 'templates', 'deployment.yaml'), deploymentYaml);
-    
-    // Créer templates/pvc.yaml pour le volume persistant
-    const pvcYaml = `{{- if .Values.persistence.enabled }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ .Release.Name }}-data
-spec:
-  accessModes:
-    - {{ .Values.persistence.accessMode }}
-  storageClassName: {{ .Values.persistence.storageClass }}
-  resources:
-    requests:
-      storage: {{ .Values.persistence.size }}
-{{- end }}`;
-    
-    fs.writeFileSync(path.join(chartDir, 'templates', 'pvc.yaml'), pvcYaml);
     
     // Créer templates/service.yaml
     const serviceYaml = `apiVersion: v1
@@ -343,7 +314,7 @@ router.post('/', async (req, res) => {
 
 // Route pour le déploiement avec Helm Chart généré
 router.post('/generated', async (req, res) => {
-    const { repoUrl, gitlabToken, branch, namespace, sourceType } = req.body;
+    const { repoUrl, gitlabToken, branch, namespace, sourceType, dockerfileSource, customDockerfile } = req.body;
 
     if (!repoUrl || !branch || !namespace) {
         return res.status(400).json({
@@ -359,6 +330,13 @@ router.post('/generated', async (req, res) => {
         });
     }
 
+    if (dockerfileSource === 'custom' && !customDockerfile) {
+        return res.status(400).json({
+            error: 'Erreur lors du déploiement',
+            details: 'Dockerfile personnalisé requis.',
+        });
+    }
+
     let tempDir;
     try {
         // Vérifier les prérequis
@@ -371,10 +349,26 @@ router.post('/generated', async (req, res) => {
         await createDefaultQuotas(namespace);
 
         // Récupérer les fichiers depuis le dépôt
-        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true);
+        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true, dockerfileSource === 'custom');
 
-        // Extraire le nom de l'image du projet Git
-        const imageName = path.basename(repoUrl, '.git');
+        // Si Dockerfile personnalisé, l'écrire dans le répertoire temporaire
+        if (dockerfileSource === 'custom') {
+            console.log('Écriture du Dockerfile personnalisé...');
+            fs.writeFileSync(path.join(tempDir, 'Dockerfile'), customDockerfile);
+            console.log('Contenu du Dockerfile personnalisé:', customDockerfile);
+        }
+
+        // Extraire le nom de l'image du projet Git et le hash du dernier commit
+        const repoName = path.basename(repoUrl, '.git');
+        let commitHash;
+        try {
+            commitHash = await execCommand(`cd ${tempDir} && git rev-parse --short HEAD`);
+            commitHash = commitHash.trim();
+        } catch (error) {
+            console.error('Erreur lors de la récupération du hash du commit:', error);
+            commitHash = Date.now().toString(36); // Fallback si erreur
+        }
+        const imageName = `${repoName}-${commitHash}`;
 
         // Extraire les ports exposés du Dockerfile
         const exposedPorts = await extractExposedPorts(path.join(tempDir, 'Dockerfile'));
@@ -402,7 +396,7 @@ router.post('/generated', async (req, res) => {
             console.error('Erreur lors de la vérification des permissions:', error);
         }
 
-        // Construire l'image avec plus de verbosité
+        // Construire l'image avec plus de verbosité et en forçant la reconstruction
         const buildOutput = await execCommand(`podman build --no-cache --progress=plain -t ${localImageName} ${tempDir}`);
         console.log('Sortie de la construction:', buildOutput);
 

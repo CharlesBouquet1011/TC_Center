@@ -85,6 +85,27 @@
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Source du Dockerfile:</label>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="dockerfileSource" value="repo" class="form-radio text-blue-600" checked>
+                            <span class="ml-2">Dockerfile fourni dans le dépôt</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="dockerfileSource" value="custom" class="form-radio text-blue-600">
+                            <span class="ml-2">Dockerfile personnalisé</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="customDockerfileContainer" class="hidden">
+                    <label for="customDockerfile" class="block text-sm font-medium text-gray-700">Dockerfile personnalisé:</label>
+                    <textarea id="customDockerfile" rows="10" 
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-sm"
+                        placeholder="FROM node:latest&#10;WORKDIR /app&#10;COPY package*.json ./&#10;RUN npm install&#10;COPY . .&#10;EXPOSE 3000&#10;CMD [&quot;npm&quot;, &quot;start&quot;]"></textarea>
+                </div>
+
                 <button id="deployButton" onclick="deployApp()"
                     class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative">
                     Déployer
@@ -368,6 +389,22 @@
             });
         });
 
+        // Ajouter la gestion du Dockerfile personnalisé
+        document.addEventListener('DOMContentLoaded', function() {
+            const dockerfileSourceRadios = document.getElementsByName('dockerfileSource');
+            const customDockerfileContainer = document.getElementById('customDockerfileContainer');
+
+            dockerfileSourceRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customDockerfileContainer.classList.remove('hidden');
+                    } else {
+                        customDockerfileContainer.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
         // Modifier la fonction deployApp
         async function deployApp() {
             if (isProcessing) return;
@@ -379,13 +416,16 @@
                 const namespace = userData.user.username.toLowerCase();
                 const deploymentType = document.getElementById('deploymentType').value;
                 const sourceType = document.querySelector('input[name="sourceType"]:checked').value;
+                const dockerfileSource = document.querySelector('input[name="dockerfileSource"]:checked').value;
 
                 const data = {
                     repoUrl: document.getElementById('repoUrl').value,
                     gitlabToken: sourceType === 'gitlab' ? document.getElementById('gitlabToken').value : null,
                     branch: document.getElementById('branch').value,
                     namespace: namespace,
-                    sourceType: sourceType
+                    sourceType: sourceType,
+                    dockerfileSource: dockerfileSource,
+                    customDockerfile: dockerfileSource === 'custom' ? document.getElementById('customDockerfile').value : null
                 };
 
                 const endpoint = deploymentType === 'provided' ? '/deploy' : '/deploy/generated';
