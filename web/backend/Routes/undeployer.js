@@ -38,6 +38,28 @@ router.delete('/', async (req, res) => {
             });
         }
 
+        // Supprimer les PVC associés à la release
+        try {
+            const pvcs = await execCommand(`kubectl get pvc -n ${namespace} -l app.kubernetes.io/instance=${releaseName} -o json`);
+            const pvcsJson = JSON.parse(pvcs);
+            
+            if (pvcsJson.items && pvcsJson.items.length > 0) {
+                for (const pvc of pvcsJson.items) {
+                    await execCommand(`kubectl delete pvc ${pvc.metadata.name} -n ${namespace}`);
+                    console.log(`PVC ${pvc.metadata.name} supprimé`);
+                }
+            } else {
+                console.log(`Aucun PVC trouvé pour la release ${releaseName}`);
+            }
+        } catch (error) {
+            // Si la commande retourne une erreur "not found", c'est normal
+            if (error.message && error.message.includes('not found')) {
+                console.log(`Aucun PVC trouvé pour la release ${releaseName}`);
+            } else {
+                console.error('Erreur lors de la suppression des PVC:', error);
+            }
+        }
+
         // Supprimer la release Helm
         const helmOutput = await execCommand(`helm uninstall ${releaseName} -n ${namespace}`);
         console.log(`Release ${releaseName} supprimée du namespace ${namespace}`);
