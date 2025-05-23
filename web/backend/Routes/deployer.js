@@ -376,8 +376,30 @@ router.post('/generated', async (req, res) => {
         if (fs.existsSync(path.join(tempDir, 'package.json'))) {
             console.log('Contenu du package.json:', fs.readFileSync(path.join(tempDir, 'package.json'), 'utf8'));
         }
-        const buildOutput = await execCommand(`podman build -t ${localImageName} ${tempDir}`);
+        
+        // Vérifier les permissions du répertoire
+        try {
+            const stats = fs.statSync(tempDir);
+            console.log('Permissions du répertoire temporaire:', {
+                mode: stats.mode,
+                uid: stats.uid,
+                gid: stats.gid
+            });
+        } catch (error) {
+            console.error('Erreur lors de la vérification des permissions:', error);
+        }
+
+        // Construire l'image avec plus de verbosité
+        const buildOutput = await execCommand(`podman build --no-cache --progress=plain -t ${localImageName} ${tempDir}`);
         console.log('Sortie de la construction:', buildOutput);
+
+        // Vérifier si l'image a été créée
+        try {
+            const imageCheck = await execCommand(`podman image inspect ${localImageName}`);
+            console.log('Image créée avec succès:', imageCheck);
+        } catch (error) {
+            console.error('Erreur lors de la vérification de l\'image:', error);
+        }
 
         // Utiliser l'IP réseau du serveur pour le registre
         const registryIp = getLocalIp();

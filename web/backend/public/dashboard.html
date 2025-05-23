@@ -103,7 +103,7 @@
                     <label for="customDockerfile" class="block text-sm font-medium text-gray-700">Dockerfile personnalisé:</label>
                     <textarea id="customDockerfile" rows="10" 
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-sm"
-                        placeholder="FROM node:latest&#10;WORKDIR /app&#10;COPY package*.json ./&#10;RUN npm install&#10;COPY . .&#10;EXPOSE 3000&#10;CMD [&quot;npm&quot;, &quot;start&quot;]"></textarea>
+                        placeholder="FROM node:latest&#10;WORKDIR /app&#10;RUN chown -R node:node /app&#10;USER node&#10;COPY --chown=node:node package*.json ./&#10;RUN npm install&#10;COPY --chown=node:node . .&#10;EXPOSE 3000&#10;CMD [&quot;npm&quot;, &quot;start&quot;]"></textarea>
                 </div>
 
                 <button id="deployButton" onclick="deployApp()"
