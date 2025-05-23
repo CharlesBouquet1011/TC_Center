@@ -120,6 +120,116 @@ function getLocalIp() {
     return '127.0.0.1';
 }
 
+// Fonction pour extraire les ports exposés du Dockerfile
+async function extractExposedPorts(dockerfilePath) {
+    try {
+        const dockerfileContent = fs.readFileSync(dockerfilePath, 'utf8');
+        const exposedPorts = [];
+        const lines = dockerfileContent.split('\n');
+        
+        for (const line of lines) {
+            if (line.trim().startsWith('EXPOSE')) {
+                const ports = line.trim().split(' ').slice(1);
+                exposedPorts.push(...ports);
+            }
+        }
+        
+        return exposedPorts;
+    } catch (error) {
+        console.error('Erreur lors de la lecture du Dockerfile:', error);
+        return ['80']; // Port par défaut si aucun port n'est trouvé
+    }
+}
+
+// Fonction pour générer un Helm Chart basique
+async function generateHelmChart(tempDir, imageName, exposedPorts) {
+    const chartDir = path.join(tempDir, 'helm-chart');
+    fs.mkdirSync(chartDir, { recursive: true });
+    
+    // Créer Chart.yaml
+    const chartYaml = `apiVersion: v2
+name: ${path.basename(imageName)}
+description: Helm Chart généré automatiquement
+type: application
+version: 0.1.0
+appVersion: "1.0.0"`;
+    
+    fs.writeFileSync(path.join(chartDir, 'Chart.yaml'), chartYaml);
+    
+    // Créer values.yaml
+    const valuesYaml = `replicaCount: 1
+image:
+  repository: ${imageName}
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  type: LoadBalancer
+  ports:
+${exposedPorts.map(port => `    - port: ${port}
+      targetPort: ${port}
+      protocol: TCP`).join('\n')}
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi`;
+    
+    fs.writeFileSync(path.join(chartDir, 'values.yaml'), valuesYaml);
+    
+    // Créer templates/deployment.yaml
+    const deploymentYaml = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+${exposedPorts.map(port => `            - containerPort: ${port}`).join('\n')}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}`;
+    
+    fs.mkdirSync(path.join(chartDir, 'templates'), { recursive: true });
+    fs.writeFileSync(path.join(chartDir, 'templates', 'deployment.yaml'), deploymentYaml);
+    
+    // Créer templates/service.yaml
+    const serviceYaml = `apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+{{- range .Values.service.ports }}
+    - port: {{ .port }}
+      targetPort: {{ .targetPort }}
+      protocol: {{ .protocol }}
+{{- end }}
+  selector:
+    app: {{ .Release.Name }}`;
+    
+    fs.writeFileSync(path.join(chartDir, 'templates', 'service.yaml'), serviceYaml);
+    
+    return chartDir;
+}
+
 // Route pour le déploiement
 router.post('/', async (req, res) => {
     const { gitlabUrl, gitlabToken, branch, namespace } = req.body;
@@ -176,6 +286,68 @@ router.post('/', async (req, res) => {
         // Déployer le chart Helm depuis le répertoire local avec l'image du registre réseau
         const helmOutput = await execCommand(
             `helm upgrade --install ${releaseName} ${tempDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:${REGISTRY_PORT}/${releaseName} --set image.tag=latest`
+        );
+
+        // Nettoyer le répertoire temporaire
+        fs.rmSync(tempDir, { recursive: true, force: true });
+
+        res.json({ message: 'Déploiement lancé avec succès', output: helmOutput });
+    } catch (err) {
+        console.error('Erreur de déploiement:', err);
+        res.status(500).json({ 
+            error: 'Erreur lors du déploiement', 
+            details: err.toString(),
+            message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes, Helm, Docker et le registre privé'
+        });
+    }
+});
+
+// Route pour le déploiement avec Helm Chart généré
+router.post('/generated', async (req, res) => {
+    const { gitlabUrl, gitlabToken, branch, namespace } = req.body;
+
+    if (!gitlabUrl || !gitlabToken || !branch || !namespace) {
+        return res.status(400).json({
+            error: 'Erreur lors du déploiement',
+            details: 'Des paramètres sont manquants.',
+        });
+    }
+
+    try {
+        // Vérifier les prérequis
+        await checkPrerequisites();
+
+        // Créer un namespace
+        await execCommand(`kubectl create namespace ${namespace} --dry-run=client -o yaml | kubectl apply -f -`);
+
+        // Créer les quotas par défaut
+        await createDefaultQuotas(namespace);
+
+        // Récupérer les fichiers depuis GitLab
+        const tempDir = await fetchFromGitLab(gitlabUrl, gitlabToken, branch);
+
+        // Extraire le nom de l'image du projet Git
+        const imageName = path.basename(gitlabUrl, '.git');
+
+        // Extraire les ports exposés du Dockerfile
+        const exposedPorts = await extractExposedPorts(path.join(tempDir, 'Dockerfile'));
+
+        // Générer le Helm Chart
+        const chartDir = await generateHelmChart(tempDir, imageName, exposedPorts);
+
+        // Construire l'image Podman
+        const localImageName = `${imageName}:latest`;
+        await execCommand(`podman build -t ${localImageName} ${tempDir}`);
+
+        // Utiliser l'IP réseau du serveur pour le registre
+        const registryIp = getLocalIp();
+        const registryImage = `${registryIp}:${REGISTRY_PORT}/${imageName}:latest`;
+        await execCommand(`podman tag ${localImageName} ${registryImage}`);
+        await execCommand(`podman push ${registryImage}`);
+
+        // Déployer le chart Helm généré
+        const helmOutput = await execCommand(
+            `helm upgrade --install ${imageName} ${chartDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:${REGISTRY_PORT}/${imageName} --set image.tag=latest`
         );
 
         // Nettoyer le répertoire temporaire

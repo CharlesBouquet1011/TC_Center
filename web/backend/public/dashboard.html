@@ -46,6 +46,13 @@
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Déployer une Application</h2>
             <div class="space-y-4">
                 <div>
+                    <label for="deploymentType" class="block text-sm font-medium text-gray-700">Type de déploiement:</label>
+                    <select id="deploymentType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="provided">Helm Chart fourni</option>
+                        <option value="generated">Helm Chart généré</option>
+                    </select>
+                </div>
+                <div>
                     <label for="gitlabUrl" class="block text-sm font-medium text-gray-700">URL du projet GitLab:</label>
                     <input type="text" id="gitlabUrl" placeholder="https://gitlab.com/username/project.git"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -332,17 +339,19 @@
             try {
                 const userData = await makeApiRequest('/auth/check');
                 const namespace = userData.user.username.toLowerCase();
+                const deploymentType = document.getElementById('deploymentType').value;
 
-            const data = {
-                gitlabUrl: document.getElementById('gitlabUrl').value,
-                gitlabToken: document.getElementById('gitlabToken').value,
-                branch: document.getElementById('branch').value,
-                namespace: namespace
-            };
+                const data = {
+                    gitlabUrl: document.getElementById('gitlabUrl').value,
+                    gitlabToken: document.getElementById('gitlabToken').value,
+                    branch: document.getElementById('branch').value,
+                    namespace: namespace
+                };
 
-                const result = await makeApiRequest('/deploy', 'POST', data);
+                const endpoint = deploymentType === 'provided' ? '/deploy' : '/deploy/generated';
+                const result = await makeApiRequest(endpoint, 'POST', data);
                 displayResult(result, true);
-                    await loadReleasesForNamespace();
+                await loadReleasesForNamespace();
             } catch (error) {
                 displayResult({ error: error.message }, false);
             } finally {
