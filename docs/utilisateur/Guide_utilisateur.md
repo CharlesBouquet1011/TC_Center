@@ -1,4 +1,32 @@
 # Déployer une application sur TC Center
+Afin d'utilistrer l'utilisation du **TC Center** nous nous basons sur une application développé par un utilisateur qui s'apparente à un HelloWorld pour Kubernetes. Nous détaillons dans ce document les étapes nécessaires à sa mise à disposition sur le cluster. 
+
+## 1. Spécification HelloWorld
+Nous partons d'une application disponible publiquement [ici](https://github.com/sfrenot/wot).   
+Vous pouvez cloner cette application et tester quelle fonctionne.
+
+Dans une première fenêtre, déployez l'application
+```bash
+git clone git@github.com:sfrenot/wot.git`
+cd wot
+npm install
+node ./index.js
+```
+
+Dans une seconde fenêtre, testez son fonctionnement  
+```bash
+curl localhost:3030/crawl
+```
+L'application mets environ 10s à répondre. Pour un résulat plus esthétique, vous pouvez charger la page dans votre [navigateur](http://localhost:3030/crawl).
+L'application n'a pas de sécurité, elle affiche un résultat d'analyse d'une API publique d'un jeu en ligne. 
+
+Le reste du document va décrire comment porter cette application dans le contexte du **TC_Center**. C'est à dire la packager dans un format standard, puis demander son hébergement sur l'infrastructure. A l'issue du totorial, l'application sera accessible sur une infrastructure Kubernetes.
+
+## 2. Résumé des opérations
+
+
+
+
 [Exemple d'application préte à être déployée après être clonée](https://gitlab.insa-lyon.fr/gvantourou/bob)
 ## 1. Préparer une application fonctionnelle et conteneurisée
 
