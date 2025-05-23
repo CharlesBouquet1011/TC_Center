@@ -11,7 +11,7 @@ const { execCommand } = require('./k3sExec');
 const REGISTRY_PORT = 5000;
 
 // Fonction pour récupérer les fichiers depuis GitLab ou GitHub
-async function fetchFromGitLab(repoUrl, token, branch, isGenerated = false) {
+async function fetchFromGitLab(repoUrl, token, branch, isGenerated = false, hasCustomDockerfile = false) {
     try {
         // Créer un répertoire temporaire pour le clone
         const tempDir = path.join(os.tmpdir(), 'gitlab-deploy-' + Date.now());
@@ -45,7 +45,10 @@ async function fetchFromGitLab(repoUrl, token, branch, isGenerated = false) {
         }
 
         // Vérifier que les fichiers nécessaires existent
-        const requiredFiles = isGenerated ? ['Dockerfile'] : ['Dockerfile', 'Chart.yaml', 'values.yaml'];
+        const requiredFiles = isGenerated 
+            ? (hasCustomDockerfile ? [] : ['Dockerfile'])
+            : ['Chart.yaml', 'values.yaml', hasCustomDockerfile ? '' : 'Dockerfile'].filter(Boolean);
+
         for (const file of requiredFiles) {
             const filePath = path.join(tempDir, file);
             if (!fs.existsSync(filePath)) {
@@ -348,7 +351,7 @@ router.post('/generated', async (req, res) => {
         await createDefaultQuotas(namespace);
 
         // Récupérer les fichiers depuis le dépôt
-        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true);
+        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true, dockerfileSource === 'custom');
 
         // Si Dockerfile personnalisé, l'écrire dans le répertoire temporaire
         if (dockerfileSource === 'custom') {
