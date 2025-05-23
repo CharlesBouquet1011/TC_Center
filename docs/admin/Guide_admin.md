@@ -39,6 +39,7 @@ Cette partie détaille la création d’une **clé bootable** avec une image Deb
 
 [📄 Consulter le guide de création de clé bootable](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/build_os_bootable.md)
 
+(Nous avons build actuellement les images sur le node01 (aussi le master) afin de pouvoir les récupérer facilement en scp)
 ---
 ## Le boot
 

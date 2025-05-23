@@ -3,7 +3,7 @@ Afin d'utilistrer l'utilisation du **TC Center** nous nous basons sur une applic
 
 ## 1. Spécification HelloWorld
 Nous partons d'une application disponible publiquement [ici](https://github.com/sfrenot/wot).   
-Vous pouvez cloner cette application et tester quelle fonctionne.
+Vous pouvez cloner cette application et tester qu'elle fonctionne.
 
 Dans une première fenêtre, déployez l'application
 ```bash
@@ -33,10 +33,10 @@ Le reste du document va décrire comment porter cette application dans le contex
 Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
 > ⚠️ TC Center ne prend pas en charge la résolution de problèmes liés à votre code.
 
-Pour pouvoir accéder a votre code il faut qu'il soit déposé sur gitlab (dans un dépôt public ou privé selon votre préférence).
+Pour pouvoir accéder a votre code il faut **qu'il soit déposé sur gitlab** (dans un dépôt public ou privé selon votre préférence).
 
 Une fois votre application testée et stable, vous devez la **conteneuriser**.  
-Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
+Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** à la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
 
 ## 2. Créer un Helm Chart
 
@@ -79,7 +79,7 @@ Vous devez créer un **token d'accès personnel de type Developer pas Guest** af
 
 ### Étape 2 — Renseigner l’URL et le token sur notre plateforme
 
-Une fois connecte a votre compte vous aurez acces a une page de dépot ou vous pourrez :
+Une fois connecté à votre compte vous aurez acces à une page de dépot ou vous pourrez :
 
 - Collez l’**URL du dépôt Git** à cloner (utilisez le lien en HTTPS) :
   ```text

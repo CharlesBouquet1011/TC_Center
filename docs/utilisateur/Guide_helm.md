@@ -3,7 +3,7 @@
 ## Créer la structure du chart
 Deux possibilités:
  - Recommandé : exécuter la commande: ```helm create nom_de_votre_chart```
- - Alternative : créer tous les dossiers (`/templates` et si nécessaire `/charts`) et fichiers (Chart.yaml, values.yaml a la racine du dossier, ainsi que tous les fichiers a mettre dans template) manuellement
+ - Alternative : créer tous les dossiers (`/templates` et si nécessaire `/charts`) et fichiers (Chart.yaml, values.yaml à la racine du dossier, ainsi que tous les fichiers a mettre dans template) manuellement
  
 
 ---
@@ -11,9 +11,9 @@ Deux possibilités:
 ## Modifier les fichiers nécessaires
 
 ### Chart.yaml
-Chart.yaml contient les informations globales sur notre helm chart, c'est une sorte de manifeste. C'est dans ce fichier qu'on trouve a la ligne name le nom de la release permettant d'identifier l'application une fois déposée sur notre site web.
+Chart.yaml contient les informations globales sur notre helm chart, c'est une sorte de manifeste. C'est dans ce fichier qu'on trouve à la ligne name le nom de la release permettant d'identifier l'application une fois déposée sur notre site web.
 
-On y trouve aussi la version du chart qu'il peut etre intéressant d'incrémenter au fur et a mesure de vos updates.
+On y trouve aussi la version du chart qu'il peut être intéressant d'incrémenter au fur et à mesure de vos updates.
 
 ### Values.yaml
 Le fichier values.yaml dans un Helm chart est le fichier central de configuration. Il sert à définir les valeurs par défaut que Helm utilisera lors du déploiement de votre application Kubernetes avec ce chart.
@@ -22,7 +22,7 @@ Le fichier values.yaml dans un Helm chart est le fichier central de configuratio
 services: 
     <container_name>
 ```
-Les valeurs définies dans ce fichier peuvent etre utilisées ensuite dans le fichiers de /templates sous la forme de: ```{{.Values.<variable>}}```.
+Les valeurs définies dans ce fichier peuvent être utilisées ensuite dans le fichiers de /templates sous la forme de: ```{{.Values.<variable>}}```.
 
 ### /templates
 Le dossier `/templates` contient **les fichiers YAML modèles (templates)** qui décrivent les ressources Kubernetes à déployer (Pods, Services, Ingress, etc.). Ces fichiers sont écrits en YAML avec des expressions Go templating (`{{ }}`) permettant d’utiliser les variables définies dans `values.yaml`.

@@ -1,5 +1,5 @@
 # Pistes d'améliorations
-Ce fichier représente la liste des choses que l'on aurait aimé mettre mais que l'on a pas pu faire pour une raison ou une autre (principalement par manque de temps, 4 semaine c'est court)
+Ce fichier représente la liste des choses que l'on aurait aimé mettre mais que l'on a pas pu faire pour une raison ou une autre (principalement par manque de temps, 4 semaines c'est court).
 
 ## Boot:
 - Automatiser le boot en fonction de la configuration souhaitée dès le départ, notre système flexible demande une intéraction utilisateur ce qui empêche de redémarrer un pc à distance lors du boot

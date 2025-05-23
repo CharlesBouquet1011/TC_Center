@@ -1,30 +1,29 @@
 # Configuration Réseau
 
 # Réseau virtuel
-Le cluster k3s tourne avec un reverse proxy traefik
+Le cluster k3s tourne avec un reverse proxy traefik.
 Le DNS doit pointer sur le node master (ingress traefik) qui redistribue ensuite aux pods concernés.
 
 Chaque application doit configurer un ingress qui va définir le nom de domaine utilisé et les ports du pod à contacter pour l'ingress.
-Chaque pod doit configurer un service pour communiquer avec d'autres pods
+Chaque pod doit configurer un service pour communiquer avec d'autres pods.
 
 traefik se charge automatiquement de gérer tous les ingress définis et fait le load balancer entre les replicas.
 
-# Réseau physique:
+# Réseau physique et configuration du routeur:
 
-mettre un schéma ici Mathis
-
-routeur, LAN etc à mettre
-
+Voir [ici](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/admin/Configuration_routeur_Cisco_881.md).
 
 
 ## Routeur utilisé:
 cisco 800 series.
+
 ### Réinitialiser le mot de passe:
- j'ai utilisé screen `sudo apt install screen` puis je me suis connecté au routeur `sudo screen /dev/ttyS0` puis relancer le routeur, au lancement dans screen faire CTRL A B (cela envoie un BREAK et permet d'arriver dans ROMMON) (read only memory). Ensuite il faut désactiver le chargement automatique de la config avec `confreg 0x2142` puis `reset` pour redémarrer.
+ J'ai utilisé screen `sudo apt install screen` puis je me suis connecté au routeur `sudo screen /dev/ttyS0` puis il faut relancer le routeur. A son redémarrage, faire CTRL A B dans screen  (cela envoie un BREAK et permet d'arriver dans ROMMON) (read only memory). Ensuite il faut désactiver le chargement automatique de la config avec `confreg 0x2142` puis `reset` pour redémarrer.
 Au prompt qui demande si on veut configurer automatiquement, mettre `no`.
 
 ### Reconfigurer le mot de passe:
-Ici je suppose que vous avez des bases en réseau.
+Ici je suppose que vous avez des bases en réseau et en configuration d'un routeur cisco.
+
 `enable`
 
 `copy startup-config running-config` pour récupérer l'ancienne config
@@ -46,7 +45,3 @@ Ici je suppose que vous avez des bases en réseau.
 `write memory`
 
 `reload`
-
-## Configuration du routeur
-
-cf [Configuration routeur Cisco 8000.md](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/Configuration routeur Cisco 8000.md)
