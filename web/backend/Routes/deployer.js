@@ -313,7 +313,7 @@ router.post('/', async (req, res) => {
 
 // Route pour le déploiement avec Helm Chart généré
 router.post('/generated', async (req, res) => {
-    const { repoUrl, gitlabToken, branch, namespace, sourceType } = req.body;
+    const { repoUrl, gitlabToken, branch, namespace, sourceType, dockerfileSource, customDockerfile } = req.body;
 
     if (!repoUrl || !branch || !namespace) {
         return res.status(400).json({
@@ -326,6 +326,13 @@ router.post('/generated', async (req, res) => {
         return res.status(400).json({
             error: 'Erreur lors du déploiement',
             details: 'Token GitLab requis pour les dépôts GitLab.',
+        });
+    }
+
+    if (dockerfileSource === 'custom' && !customDockerfile) {
+        return res.status(400).json({
+            error: 'Erreur lors du déploiement',
+            details: 'Dockerfile personnalisé requis.',
         });
     }
 
@@ -342,6 +349,11 @@ router.post('/generated', async (req, res) => {
 
         // Récupérer les fichiers depuis le dépôt
         tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true);
+
+        // Si Dockerfile personnalisé, l'écrire dans le répertoire temporaire
+        if (dockerfileSource === 'custom') {
+            fs.writeFileSync(path.join(tempDir, 'Dockerfile'), customDockerfile);
+        }
 
         // Extraire le nom de l'image du projet Git
         const imageName = path.basename(repoUrl, '.git');
