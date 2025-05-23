@@ -355,7 +355,9 @@ router.post('/generated', async (req, res) => {
 
         // Si Dockerfile personnalisé, l'écrire dans le répertoire temporaire
         if (dockerfileSource === 'custom') {
+            console.log('Écriture du Dockerfile personnalisé...');
             fs.writeFileSync(path.join(tempDir, 'Dockerfile'), customDockerfile);
+            console.log('Contenu du Dockerfile personnalisé:', customDockerfile);
         }
 
         // Extraire le nom de l'image du projet Git
@@ -367,9 +369,15 @@ router.post('/generated', async (req, res) => {
         // Générer le Helm Chart
         const chartDir = await generateHelmChart(tempDir, imageName, exposedPorts);
 
-        // Construire l'image Podman
+        // Construire l'image Podman avec plus de logs
         const localImageName = `${imageName}:latest`;
-        await execCommand(`podman build -t ${localImageName} ${tempDir}`);
+        console.log('Début de la construction de l\'image...');
+        console.log('Contenu du répertoire temporaire:', fs.readdirSync(tempDir));
+        if (fs.existsSync(path.join(tempDir, 'package.json'))) {
+            console.log('Contenu du package.json:', fs.readFileSync(path.join(tempDir, 'package.json'), 'utf8'));
+        }
+        const buildOutput = await execCommand(`podman build -t ${localImageName} ${tempDir}`);
+        console.log('Sortie de la construction:', buildOutput);
 
         // Utiliser l'IP réseau du serveur pour le registre
         const registryIp = getLocalIp();
