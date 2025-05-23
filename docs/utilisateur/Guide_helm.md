@@ -79,3 +79,8 @@ spec:
 A utiliser seulement si votre chart a des dépendances a d'autres charts helm. Dossier nécessaire uniquement pour les helm charts complexes.
 
 > 📚 Consultez la [documentation officielle de Helm](https://helm.sh/docs/chart_template_guide/) pour plus de détails.
+
+### debug
+
+Faire `helm lint {path}`pour que helm cherche des erreurs dans le template.
+Attention, s'il n'indique pas d'erreur, ça ne veut pas dire qu'il n'y en a pas, l'application s'installera correctement avec un helm install mais helm pourrait s'être trompé de champ. (à vérifier au runtime)
