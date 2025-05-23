@@ -27,21 +27,19 @@ async function fetchFromGitLab(repoUrl, token, branch, isGenerated = false, hasC
         if (cleanUrl.includes('github.com')) {
             // GitHub public - pas besoin de token
             cloneUrl = cleanUrl;
+            console.log('Clonage depuis GitHub:', cloneUrl);
+            // Forcer le clonage de la dernière version
+            await execCommand(`git clone --depth 1 -b ${branch} ${cloneUrl} ${tempDir}`);
+            // Mettre à jour les sous-modules si présents
+            await execCommand(`cd ${tempDir} && git submodule update --init --recursive`);
         } else {
             // GitLab - utiliser le token
             if (!token) {
                 throw new Error('Token GitLab requis pour les dépôts GitLab');
             }
             cloneUrl = `https://oauth2:${token}@${cleanUrl.replace('https://', '')}`;
-        }
-
-        console.log('Clonage du dépôt avec l\'URL:', cloneUrl);
-
-        // Cloner le dépôt
-        try {
+            console.log('Clonage depuis GitLab:', cloneUrl);
             await execCommand(`git clone -b ${branch} ${cloneUrl} ${tempDir}`);
-        } catch (error) {
-            throw new Error(`Erreur lors du clonage du dépôt: ${error.message}`);
         }
 
         // Vérifier que les fichiers nécessaires existent
@@ -168,7 +166,7 @@ appVersion: "1.0.0"`;
     
     fs.writeFileSync(path.join(chartDir, 'Chart.yaml'), chartYaml);
     
-    // Créer values.yaml
+    // Créer values.yaml avec configuration Longhorn
     const valuesYaml = `replicaCount: 1
 image:
   repository: ${imageName}
@@ -186,11 +184,16 @@ resources:
     memory: 512Mi
   requests:
     cpu: 250m
-    memory: 256Mi`;
+    memory: 256Mi
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  size: 1Gi
+  accessMode: ReadWriteOnce`;
     
     fs.writeFileSync(path.join(chartDir, 'values.yaml'), valuesYaml);
     
-    // Créer templates/deployment.yaml
+    // Créer templates/deployment.yaml avec configuration des volumes
     const deploymentYaml = `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -214,10 +217,34 @@ spec:
           ports:
 ${exposedPorts.map(port => `            - containerPort: ${port}`).join('\n')}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}`;
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: app-data
+              mountPath: /app/data
+      volumes:
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data`;
     
     fs.mkdirSync(path.join(chartDir, 'templates'), { recursive: true });
     fs.writeFileSync(path.join(chartDir, 'templates', 'deployment.yaml'), deploymentYaml);
+    
+    // Créer templates/pvc.yaml pour le volume persistant
+    const pvcYaml = `{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-data
+spec:
+  accessModes:
+    - {{ .Values.persistence.accessMode }}
+  storageClassName: {{ .Values.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+{{- end }}`;
+    
+    fs.writeFileSync(path.join(chartDir, 'templates', 'pvc.yaml'), pvcYaml);
     
     // Créer templates/service.yaml
     const serviceYaml = `apiVersion: v1
@@ -316,7 +343,7 @@ router.post('/', async (req, res) => {
 
 // Route pour le déploiement avec Helm Chart généré
 router.post('/generated', async (req, res) => {
-    const { repoUrl, gitlabToken, branch, namespace, sourceType, dockerfileSource, customDockerfile } = req.body;
+    const { repoUrl, gitlabToken, branch, namespace, sourceType } = req.body;
 
     if (!repoUrl || !branch || !namespace) {
         return res.status(400).json({
@@ -332,13 +359,6 @@ router.post('/generated', async (req, res) => {
         });
     }
 
-    if (dockerfileSource === 'custom' && !customDockerfile) {
-        return res.status(400).json({
-            error: 'Erreur lors du déploiement',
-            details: 'Dockerfile personnalisé requis.',
-        });
-    }
-
     let tempDir;
     try {
         // Vérifier les prérequis
@@ -351,14 +371,7 @@ router.post('/generated', async (req, res) => {
         await createDefaultQuotas(namespace);
 
         // Récupérer les fichiers depuis le dépôt
-        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true, dockerfileSource === 'custom');
-
-        // Si Dockerfile personnalisé, l'écrire dans le répertoire temporaire
-        if (dockerfileSource === 'custom') {
-            console.log('Écriture du Dockerfile personnalisé...');
-            fs.writeFileSync(path.join(tempDir, 'Dockerfile'), customDockerfile);
-            console.log('Contenu du Dockerfile personnalisé:', customDockerfile);
-        }
+        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true);
 
         // Extraire le nom de l'image du projet Git
         const imageName = path.basename(repoUrl, '.git');
@@ -376,7 +389,7 @@ router.post('/generated', async (req, res) => {
         if (fs.existsSync(path.join(tempDir, 'package.json'))) {
             console.log('Contenu du package.json:', fs.readFileSync(path.join(tempDir, 'package.json'), 'utf8'));
         }
-        
+
         // Vérifier les permissions du répertoire
         try {
             const stats = fs.statSync(tempDir);
