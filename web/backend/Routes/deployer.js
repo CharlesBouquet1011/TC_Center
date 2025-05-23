@@ -11,7 +11,7 @@ const { execCommand } = require('./k3sExec');
 const REGISTRY_PORT = 5000;
 
 // Fonction pour récupérer les fichiers depuis GitLab
-async function fetchFromGitLab(gitlabUrl, token, branch) {
+async function fetchFromGitLab(gitlabUrl, token, branch, isGenerated = false) {
     try {
         // Créer un répertoire temporaire pour le clone
         const tempDir = path.join(os.tmpdir(), 'gitlab-deploy-' + Date.now());
@@ -36,7 +36,7 @@ async function fetchFromGitLab(gitlabUrl, token, branch) {
         }
 
         // Vérifier que les fichiers nécessaires existent
-        const requiredFiles = ['Dockerfile', 'Chart.yaml', 'values.yaml'];
+        const requiredFiles = isGenerated ? ['Dockerfile'] : ['Dockerfile', 'Chart.yaml', 'values.yaml'];
         for (const file of requiredFiles) {
             const filePath = path.join(tempDir, file);
             if (!fs.existsSync(filePath)) {
@@ -323,8 +323,8 @@ router.post('/generated', async (req, res) => {
         // Créer les quotas par défaut
         await createDefaultQuotas(namespace);
 
-        // Récupérer les fichiers depuis GitLab
-        const tempDir = await fetchFromGitLab(gitlabUrl, gitlabToken, branch);
+        // Récupérer les fichiers depuis GitLab avec isGenerated=true
+        const tempDir = await fetchFromGitLab(gitlabUrl, gitlabToken, branch, true);
 
         // Extraire le nom de l'image du projet Git
         const imageName = path.basename(gitlabUrl, '.git');
