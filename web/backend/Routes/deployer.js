@@ -10,21 +10,30 @@ const { execCommand } = require('./k3sExec');
 
 const REGISTRY_PORT = 5000;
 
-// Fonction pour récupérer les fichiers depuis GitLab
-async function fetchFromGitLab(gitlabUrl, token, branch, isGenerated = false) {
+// Fonction pour récupérer les fichiers depuis GitLab ou GitHub
+async function fetchFromGitLab(repoUrl, token, branch, isGenerated = false) {
     try {
         // Créer un répertoire temporaire pour le clone
         const tempDir = path.join(os.tmpdir(), 'gitlab-deploy-' + Date.now());
         fs.mkdirSync(tempDir, { recursive: true });
 
-        // Nettoyer l'URL GitLab
-        let cleanUrl = gitlabUrl.trim();
+        // Nettoyer l'URL
+        let cleanUrl = repoUrl.trim();
         if (cleanUrl.endsWith('.git')) {
             cleanUrl = cleanUrl.slice(0, -4);
         }
 
-        // Construire l'URL de clone avec l'authentification
-        const cloneUrl = `https://oauth2:${token}@${cleanUrl.replace('https://', '')}`;
+        let cloneUrl;
+        if (cleanUrl.includes('github.com')) {
+            // GitHub public - pas besoin de token
+            cloneUrl = cleanUrl;
+        } else {
+            // GitLab - utiliser le token
+            if (!token) {
+                throw new Error('Token GitLab requis pour les dépôts GitLab');
+            }
+            cloneUrl = `https://oauth2:${token}@${cleanUrl.replace('https://', '')}`;
+        }
 
         console.log('Clonage du dépôt avec l\'URL:', cloneUrl);
 
@@ -46,7 +55,7 @@ async function fetchFromGitLab(gitlabUrl, token, branch, isGenerated = false) {
 
         return tempDir;
     } catch (error) {
-        throw new Error(`Erreur lors de la récupération des fichiers depuis GitLab: ${error.message}`);
+        throw new Error(`Erreur lors de la récupération des fichiers: ${error.message}`);
     }
 }
 
@@ -304,15 +313,23 @@ router.post('/', async (req, res) => {
 
 // Route pour le déploiement avec Helm Chart généré
 router.post('/generated', async (req, res) => {
-    const { gitlabUrl, gitlabToken, branch, namespace } = req.body;
+    const { repoUrl, gitlabToken, branch, namespace, sourceType } = req.body;
 
-    if (!gitlabUrl || !gitlabToken || !branch || !namespace) {
+    if (!repoUrl || !branch || !namespace) {
         return res.status(400).json({
             error: 'Erreur lors du déploiement',
             details: 'Des paramètres sont manquants.',
         });
     }
 
+    if (sourceType === 'gitlab' && !gitlabToken) {
+        return res.status(400).json({
+            error: 'Erreur lors du déploiement',
+            details: 'Token GitLab requis pour les dépôts GitLab.',
+        });
+    }
+
+    let tempDir;
     try {
         // Vérifier les prérequis
         await checkPrerequisites();
@@ -323,11 +340,11 @@ router.post('/generated', async (req, res) => {
         // Créer les quotas par défaut
         await createDefaultQuotas(namespace);
 
-        // Récupérer les fichiers depuis GitLab avec isGenerated=true
-        const tempDir = await fetchFromGitLab(gitlabUrl, gitlabToken, branch, true);
+        // Récupérer les fichiers depuis le dépôt
+        tempDir = await fetchFromGitLab(repoUrl, gitlabToken, branch, true);
 
         // Extraire le nom de l'image du projet Git
-        const imageName = path.basename(gitlabUrl, '.git');
+        const imageName = path.basename(repoUrl, '.git');
 
         // Extraire les ports exposés du Dockerfile
         const exposedPorts = await extractExposedPorts(path.join(tempDir, 'Dockerfile'));
@@ -338,6 +355,10 @@ router.post('/generated', async (req, res) => {
         // Construire l'image Podman
         const localImageName = `${imageName}:latest`;
         await execCommand(`podman build -t ${localImageName} ${tempDir}`);
+
+        // Nettoyer le répertoire temporaire immédiatement après la création de l'image
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        tempDir = null;
 
         // Utiliser l'IP réseau du serveur pour le registre
         const registryIp = getLocalIp();
@@ -350,9 +371,6 @@ router.post('/generated', async (req, res) => {
             `helm upgrade --install ${imageName} ${chartDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:${REGISTRY_PORT}/${imageName} --set image.tag=latest`
         );
 
-        // Nettoyer le répertoire temporaire
-        fs.rmSync(tempDir, { recursive: true, force: true });
-
         res.json({ message: 'Déploiement lancé avec succès', output: helmOutput });
     } catch (err) {
         console.error('Erreur de déploiement:', err);
@@ -361,6 +379,15 @@ router.post('/generated', async (req, res) => {
             details: err.toString(),
             message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes, Helm, Docker et le registre privé'
         });
+    } finally {
+        // Nettoyage en cas d'erreur
+        if (tempDir) {
+            try {
+                fs.rmSync(tempDir, { recursive: true, force: true });
+            } catch (cleanupError) {
+                console.error('Erreur lors du nettoyage des fichiers temporaires:', cleanupError);
+            }
+        }
     }
 });
 
