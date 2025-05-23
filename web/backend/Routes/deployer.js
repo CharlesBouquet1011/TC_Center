@@ -356,10 +356,6 @@ router.post('/generated', async (req, res) => {
         const localImageName = `${imageName}:latest`;
         await execCommand(`podman build -t ${localImageName} ${tempDir}`);
 
-        // Nettoyer le répertoire temporaire immédiatement après la création de l'image
-        fs.rmSync(tempDir, { recursive: true, force: true });
-        tempDir = null;
-
         // Utiliser l'IP réseau du serveur pour le registre
         const registryIp = getLocalIp();
         const registryImage = `${registryIp}:${REGISTRY_PORT}/${imageName}:latest`;
@@ -370,6 +366,10 @@ router.post('/generated', async (req, res) => {
         const helmOutput = await execCommand(
             `helm upgrade --install ${imageName} ${chartDir} --namespace ${namespace} --create-namespace --set image.repository=${registryIp}:${REGISTRY_PORT}/${imageName} --set image.tag=latest`
         );
+
+        // Nettoyer le répertoire temporaire après le déploiement
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        tempDir = null;
 
         res.json({ message: 'Déploiement lancé avec succès', output: helmOutput });
     } catch (err) {
