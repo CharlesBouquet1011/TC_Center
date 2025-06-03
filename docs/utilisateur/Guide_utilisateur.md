@@ -3,7 +3,7 @@ Afin d'utilistrer l'utilisation du **TC Center** nous nous basons sur une applic
 
 ## 1. Spécification HelloWorld
 Nous partons d'une application disponible publiquement [ici](https://github.com/sfrenot/wot).   
-Vous pouvez cloner cette application et tester qu'elle fonctionne.
+Vous pouvez cloner cette application et tester quelle fonctionne.
 
 Dans une première fenêtre, déployez l'application
 ```bash
@@ -17,26 +17,40 @@ Dans une seconde fenêtre, testez son fonctionnement
 ```bash
 curl localhost:3030/crawl
 ```
-L'application mets environ 10s à répondre. Pour un résulat plus esthétique, vous pouvez charger la page dans votre [navigateur](http://localhost:3030/crawl).
+L'application met environ 10s à répondre. Pour un résulat plus esthétique, vous pouvez charger la page dans votre [navigateur](http://localhost:3030/crawl).
 L'application n'a pas de sécurité, elle affiche un résultat d'analyse d'une API publique d'un jeu en ligne. 
 
 Le reste du document va décrire comment porter cette application dans le contexte du **TC_Center**. C'est à dire la packager dans un format standard, puis demander son hébergement sur l'infrastructure. A l'issue du totorial, l'application sera accessible sur une infrastructure Kubernetes.
 
 ## 2. Résumé des opérations
+L'application `HelloWorld` sert de démonstrateur pour utiliser l'infrastrcture Kube. Nous supposons que cette dernière est opérationnelle. Vous pouvez vous en assurer en allant sur la page web suivante, (ou une autre technique ?). Le packaging se fait selon les étapes suivantes :
+
+- Dockerisation de l'application
+- Helmetisation de l'application
+- Kubernetisation de l'application
+- Validation de l'application
 
 
+<!-- [Exemple d'application préte à être déployée après être clonée](https://gitlab.insa-lyon.fr/gvantourou/bob) -->
+## 1. Dockerisation de l'application.
+Afin de pouvoir l'exploiter de manière autonome, votre application doit être packagée selon un standard et déposé dans un dépot gitlab que nous accédons. 
+Le packaging se fait selon la spécification docker, mais nous n'utilisons pas docker pour fabriquer l'image. Nous utilisons l'outil `podman` même si toutes les manipulations proposées sont également réalisables sous Docker. 
+
+Pour **Dockeriser** votre application nous suggerons les étapes suivantes : 
+ - Rédaction d'un fichier Dockerfile
+ - Test et validation de la contenerisation
+ - Dépot dans un repertoire du gitlab
+  
 
 
-[Exemple d'application préte à être déployée après être clonée](https://gitlab.insa-lyon.fr/gvantourou/bob)
-## 1. Préparer une application fonctionnelle et conteneurisée
 
 Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
 > ⚠️ TC Center ne prend pas en charge la résolution de problèmes liés à votre code.
 
-Pour pouvoir accéder a votre code il faut **qu'il soit déposé sur gitlab** (dans un dépôt public ou privé selon votre préférence).
+Pour pouvoir accéder a votre code il faut qu'il soit déposé sur gitlab (dans un dépôt public ou privé selon votre préférence).
 
 Une fois votre application testée et stable, vous devez la **conteneuriser**.  
-Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** à la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
+Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
 
 ## 2. Créer un Helm Chart
 
@@ -79,7 +93,7 @@ Vous devez créer un **token d'accès personnel de type Developer pas Guest** af
 
 ### Étape 2 — Renseigner l’URL et le token sur notre plateforme
 
-Une fois connecté à votre compte vous aurez acces à une page de dépot ou vous pourrez :
+Une fois connecte a votre compte vous aurez acces a une page de dépot ou vous pourrez :
 
 - Collez l’**URL du dépôt Git** à cloner (utilisez le lien en HTTPS) :
   ```text
