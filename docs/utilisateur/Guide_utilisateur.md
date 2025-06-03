@@ -1,9 +1,9 @@
 # Déployer une application sur TC Center
-Afin d'utilistrer l'utilisation du **TC Center** nous nous basons sur une application développé par un utilisateur qui s'apparente à un HelloWorld pour Kubernetes. Nous détaillons dans ce document les étapes nécessaires à sa mise à disposition sur le cluster. 
+Afin d'illustrer le **TC Center** nous nous basons sur une application développé par un utilisateur qui s'apparente à un HelloWorld pour Kubernetes. Nous détaillons dans ce document les étapes nécessaires à sa mise à disposition sur le cluster. 
 
 ## 1. Spécification HelloWorld
 Nous partons d'une application disponible publiquement [ici](https://github.com/sfrenot/wot).   
-Vous pouvez cloner cette application et tester quelle fonctionne.
+Clonez cette application et testez son fonctionnement.
 
 Dans une première fenêtre, déployez l'application
 ```bash
@@ -17,44 +17,65 @@ Dans une seconde fenêtre, testez son fonctionnement
 ```bash
 curl localhost:3030/crawl
 ```
-L'application met environ 10s à répondre. Pour un résulat plus esthétique, vous pouvez charger la page dans votre [navigateur](http://localhost:3030/crawl).
-L'application n'a pas de sécurité, elle affiche un résultat d'analyse d'une API publique d'un jeu en ligne. 
+L'application met environ 10s à répondre. Pour un résulat plus esthétique, vous pouvez charger la page dans votre [navigateur](http://localhost:3030/crawl). L'application n'a pas de sécurité, elle affiche un résultat d'analyse d'une API publique d'un jeu en ligne. 
 
-Le reste du document va décrire comment porter cette application dans le contexte du **TC_Center**. C'est à dire la packager dans un format standard, puis demander son hébergement sur l'infrastructure. A l'issue du totorial, l'application sera accessible sur une infrastructure Kubernetes.
-
-## 2. Résumé des opérations
-L'application `HelloWorld` sert de démonstrateur pour utiliser l'infrastrcture Kube. Nous supposons que cette dernière est opérationnelle. Vous pouvez vous en assurer en allant sur la page web suivante, (ou une autre technique ?). Le packaging se fait selon les étapes suivantes :
-
+Nous décrivons comment porter cette application dans le  **TC_Center**. C'est à dire :
 - Dockerisation de l'application
 - Helmetisation de l'application
 - Kubernetisation de l'application
 - Validation de l'application
 
-
+A l'issue du tutoriel, l'application sera accessible sur une infrastructure Kubernetes.
 <!-- [Exemple d'application préte à être déployée après être clonée](https://gitlab.insa-lyon.fr/gvantourou/bob) -->
-## 1. Dockerisation de l'application.
-Afin de pouvoir l'exploiter de manière autonome, votre application doit être packagée selon un standard et déposé dans un dépot gitlab que nous accédons. 
-Le packaging se fait selon la spécification docker, mais nous n'utilisons pas docker pour fabriquer l'image. Nous utilisons l'outil `podman` même si toutes les manipulations proposées sont également réalisables sous Docker. 
+## 2. Dockerisation de l'application.
+Le packaging se fait selon la spécification docker. Nous utilisons l'outil `podman` dont la syntaxe est entièrement compatible avec Docker. 
 
 Pour **Dockeriser** votre application nous suggerons les étapes suivantes : 
  - Rédaction d'un fichier Dockerfile
- - Test et validation de la contenerisation
- - Dépot dans un repertoire du gitlab
-  
+ - Tester et valider l'image
+ - Déposer le projet dans un répertoire gitlab
+
+Le fichier Dockerfile est le suivant : 
+```Dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3030
+CMD ["node", "index.js"] 
+```
+
+Construire l'image avec : `podman build -f ./Dockerfile`
+Vous pouvez lancer un conteneur en *mappant* le port 3030 `podman run -d -p 3030:3030 <imageId>`
+Vous pouvez connecter la sortie standard avec la commande `podman logs -f <conteneurId>`
+Vous pouvez enfin tester le conteneur avec la commande `curl localhost:3030/crawl`
+
+La sortie standard des *logs* devrait afficher des lignes, au bout de quelques seconde la page web est rendue. 
+## 3. Déposer votre projet sur le gitlab INSA - Générer un token d'accès
+
+Vous devez créer un **token d'accès personnel de type Developer** afin d’autoriser l'accès au code du projet.
+
+- Rendez-vous sur la page de gestion des tokens de votre plateforme Git (par exemple, GitLab : `https://gitlab.com/-/profile/personal_access_tokens`)
+- Sélectionner le rôle **developer**
+- Créez un nouveau token avec **les scopes suivants** :
+  - `api`
+  - `read_repository`
+- Donnez-lui un nom explicite (par exemple : `deploy-token-datacenter`)
+- Copiez le token : vous ne pourrez plus le voir après validation
+## 3. Créer un Helm Chart
+A la racine du projet, ajouter une description Helm dans le fichier. Chart.yaml
+```yaml
+apiVersion: v2
+name: wot-app
+description: Application World of Tanks
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+```
 
 
-
-Avant de déployer votre application sur **TC Center**, assurez-vous qu'elle fonctionne correctement en local, sans erreur ni bug.  
-> ⚠️ TC Center ne prend pas en charge la résolution de problèmes liés à votre code.
-
-Pour pouvoir accéder a votre code il faut qu'il soit déposé sur gitlab (dans un dépôt public ou privé selon votre préférence).
-
-Une fois votre application testée et stable, vous devez la **conteneuriser**.  
-Pour cela, utilisez **Docker ou Podman** et assurer d'avoir un **dockerfile** a la racine de votre projet. Le conteneur doit être autonome et prêt à être déployé.
-
-## 2. Créer un Helm Chart
-
-Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.
+%% Vous devez créer un **Helm chart** pour décrire comment votre application sera déployée sur Kubernetes.
 Le Helm Chart doit se trouver à la racine du projet
 Cela inclut :
 - Les ressources nécessaires (Deployments, Services, Ingress, etc.)
@@ -62,17 +83,16 @@ Cela inclut :
 - La structure standard d’un chart Helm (`Chart.yaml`, `values.yaml`, `templates/`, etc.)
 
 
-> ℹ️ Si vous avez besoin de plus d'aide ou d'un exemple concret, référez-vous au guide [Guide_helm](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/utilisateur/Guide_helm.md).
+> ℹ️ Si vous avez besoin %% de plus d'aide ou d'un exemple concret, référez-vous au guide [Guide_helm](https://github.com/CharlesBouquet1011/TC_Center/blob/main/docs/utilisateur/Guide_helm.md).
 
-## 3. Accéder à la plateforme TC Center
+## 4. Accéder à la plateforme TC Center
 
-Rendez-vous sur (mettre l'ip du master ici).
+Rendez-vous sur http://134.214.202.221:3000/.
 
 - Si vous êtes nouveau, créez un compte.
 - Sinon, connectez-vous avec vos identifiants.
 
-
-## 4. Déployer une application
+## 5. Déployer une application
 
 Pour déployer une application depuis un dépôt Git vers votre datacenter, suivez les étapes ci-dessous.
 
