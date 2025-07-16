@@ -1,6 +1,6 @@
 # Guide de Déploiement de TC Center
 
-Ce guide décrit les étapes nécessaires pour déployer l'application TC Center sur le masterr.
+Ce guide décrit les étapes nécessaires pour déployer l'application TC Center sur le master.
 
 ## Prérequis
 
@@ -10,7 +10,7 @@ Ce guide décrit les étapes nécessaires pour déployer l'application TC Center
 
 ## Installation
 
-1. Cloner le dépôt GitHub, il est normallement déjà cloné dans mnt/k3sVolume/TC_Center:
+1. Cloner le dépôt GitHub, il est normalement déjà cloné dans mnt/k3sVolume/TC_Center:
 ```bash
 git clone <url_du_repo>
 cd TC_Center
