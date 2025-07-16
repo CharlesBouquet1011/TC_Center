@@ -19,8 +19,6 @@ cp ../0020-enable-ssh.chroot config/hooks/live
 cp ../enable-mount-disk.chroot config/hooks/live
 
 echo task-cinnamon-desktop > config/package-lists/desktop.list.chroot
-mkdir -p config/package-lists ||true
-touch config/package-lists/desktop.list.chroot ||true 
 echo curl >> config/package-lists/desktop.list.chroot
 echo vim >> config/package-lists/desktop.list.chroot
 echo ntp >> config/package-lists/desktop.list.chroot #pour synchroniser l'heure
@@ -30,7 +28,7 @@ echo firefox-esr >> config/package-lists/desktop.list.chroot
 echo ssh >> config/package-lists/desktop.list.chroot
 echo zstd >> config/package-lists/desktop.list.chroot
 echo user-setup >> config/package-lists/desktop.list.chroot
-# echo wpasupplicant >> config/package-lists/desktop.list.chroot # Wifi management
+echo wpasupplicant >> config/package-lists/desktop.list.chroot # Wifi management
 echo kbd >> config/package-lists/desktop.list.chroot
 echo console-data >> config/package-lists/desktop.list.chroot
 echo console-setup >> config/package-lists/desktop.list.chroot
@@ -66,22 +64,16 @@ cp ../startmount.sh config/includes.chroot_after_packages/etc/skel/
 # cp ../getlogin.sh config/includes.chroot_after_packages/etc/skel/
 
 
-# ask service
 mkdir -p config/includes.chroot_after_packages/etc/systemd/system/
-chmod +x ../ask.service
+# ask service
 cp ../ask.service config/includes.chroot_after_packages/etc/systemd/system/
-
 #ssh service:
-chmod +x ../ssh_keys.service
 cp ../ssh_keys.service config/includes.chroot_after_packages/etc/systemd/system/
 # mount service
-chmod +x ../mountdisk.service
 cp ../mountdisk.service config/includes.chroot_after_packages/etc/systemd/system/
-
 
 mkdir -p config/includes.chroot_after_packages/usr/local/bin
 cp ../startmount.sh config/includes.chroot_after_packages/usr/local/bin/
-chmod +x config/includes.chroot_after_packages/usr/local/bin/startmount.sh
 
 # k3s
 echo git >> config/package-lists/desktop.list.chroot
@@ -90,6 +82,7 @@ cp ../k3s.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../hosts config/includes.chroot_after_packages/etc
 cp ../configSsh.sh config/includes.chroot_after_packages/usr/local/bin/
 cp ../authorized_keys config/includes.chroot_after_packages/usr/local/bin/
+
 #repo distant k3s
 mkdir -p config/includes.chroot_after_packages/etc/rancher/k3s/
 cp ../registries.yaml config/includes.chroot_after_packages/etc/rancher/k3s/registries.yaml
