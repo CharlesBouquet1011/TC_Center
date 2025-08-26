@@ -1,9 +1,12 @@
+Documentation https://www.cisco.com/c/en/us/td/docs/routers/access/800/software/configuration/guide/SCG800Guide/SCG800_Guide_BookMap_chapter_010.html#con_1248299
+
 ## Démarrage (configuration par port série)
 ##### Lister les interfaces disponible de port série
 Commande : dmesg | grep tty
 ##### Se connecter au port série
 Commande : `screen /dev/<interface> <base-baud>`
-Exemple : `screen /dev/ttyS0 115200`
+// ne fonctionne pas  : Exemple : `screen /dev/ttyS0 115200`
+Exemple : `screen /dev/ttyS0 9600`
 ##### Quitter le port série
 Commande : `ctrl+a` puis `ctrl+z`
 
