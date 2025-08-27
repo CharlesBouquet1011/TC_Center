@@ -1,4 +1,3 @@
-# Longhorn
 Longhorn sert à avoir une solution de stockage distribuée:
 installation avec:
 `kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml  `

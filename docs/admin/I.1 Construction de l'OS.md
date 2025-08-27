@@ -39,7 +39,7 @@ configs: #si authentification
 
 # Explication des fichiers d'os bootable 
 - **config.sfr**: configure les différentes dépendances apt, mets les fichiers de config aux bons endroits dans l'os etc
-- **ask.service**, enable_ask_service: lancent k3s.sh (j'avais besoin d'un shell intéractif au boot)
+- **ask.service**, enable_ask_service: lancent k3s.sh (j'avais besoin d'un shell interactif au boot)
 - **enable ssh.chroot**: active le ssh
 - **configAfterBoot.sh**: à lancer après le boot s'il y a eu un problème de config au boot (rarement utile)
 - **config ssh**: configure le ssh (les clés ssh acceptées)

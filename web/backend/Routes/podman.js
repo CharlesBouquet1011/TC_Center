@@ -19,24 +19,34 @@ router.post('/delete-image', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Accès non autorisé à ce namespace' });
         }
 
-        // Supprimer l'image du registry local
+        // Supprimer toutes les versions de l'image du registry local
         try {
-            await execPromise(`podman rmi localhost:5000/${namespace}/${imageName}:latest`);
+            // Supprimer l'image avec le tag latest
+            await execPromise(`podman rmi localhost:5000/${imageName}:latest`);
+            // Supprimer l'image avec le tag spécifique (si elle existe)
+            await execPromise(`podman rmi localhost:5000/${imageName}`);
+            // Supprimer l'image sans tag
+            await execPromise(`podman rmi localhost:5000/${imageName}`);
         } catch (error) {
             console.error('Erreur lors de la suppression de l\'image du registry:', error);
         }
 
-        // Supprimer l'image de la mémoire
+        // Supprimer toutes les versions de l'image de la mémoire
         try {
-            await execPromise(`podman rmi ${namespace}/${imageName}:latest`);
+            // Supprimer l'image avec le tag latest
+            await execPromise(`podman rmi ${imageName}:latest`);
+            // Supprimer l'image avec le tag spécifique (si elle existe)
+            await execPromise(`podman rmi ${imageName}`);
+            // Supprimer l'image sans tag
+            await execPromise(`podman rmi ${imageName}`);
         } catch (error) {
             console.error('Erreur lors de la suppression de l\'image de la mémoire:', error);
         }
 
-        res.json({ message: 'Image supprimée avec succès' });
+        res.json({ message: 'Images supprimées avec succès' });
     } catch (error) {
-        console.error('Erreur lors de la suppression de l\'image:', error);
-        res.status(500).json({ error: 'Erreur lors de la suppression de l\'image' });
+        console.error('Erreur lors de la suppression des images:', error);
+        res.status(500).json({ error: 'Erreur lors de la suppression des images' });
     }
 });
 

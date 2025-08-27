@@ -13,7 +13,6 @@ ExecStart=/usr/local/bin/k3s.sh
 ExecStartPost=/usr/bin/chvt 1
 TimeoutStartSec=0
 StandardInput=tty
-TTYVHanghup=yes
 TTYVTDisallocate=yes
 RemainAfterExit=yes
 
