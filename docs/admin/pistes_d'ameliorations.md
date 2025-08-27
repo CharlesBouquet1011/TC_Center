@@ -19,11 +19,11 @@ Ce fichier représente la liste des choses que l'on aurait aimé mettre mais que
 - Générer automatiquement le Helm pour les utilisateurs (surtout pour les applications simple)
 
 ## Site utilisateur:
-- Mise en place de graphes pour voir les ressources utiliser
+- Mise en place de graphes pour voir les ressources utilisées
 - Faire une page pour voir tous les pods actif pour pouvoir une vue globale
 - Mettre en place un lamdba
 - Utiliser les identifiants Insa à la place de notre registry
 
 ## Monitoring et paiement:
 - Utiliser une plateforme de paiement
-- Mettre en place la méthode bezzos
+- Mettre en place la méthode bezos
