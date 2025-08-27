@@ -3,7 +3,11 @@ Longhorn sert à avoir une solution de stockage distribuée:
 installation avec:
 `kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml  `
 
-utilisation avec:
+## Utilisation de Longhorn lors d'un un déploiement 
+Pour rappel un PersistentVolumeClaim: PVC est un type de volumes utilisés pour stocker les informations qui doivent rester entre plusieurs images ou plusieurs redémarrages de l'application (exemple une base de données). Le fichier ci-dessous indique entre autres la taille du stockage et qu'il faut utiliser la classe de stockage de longhorn plutôt que la classe de stockage par défaut de k3s (qui n'est pas longhorn). Dans tous les cas vous serez obligés de déclarer un Volume dans un fichier Helm pour faire fonctionner l'application, il ne faut juste pas oublier de préciser la classe de stockage.
+
+Pour utiliser Longhorn, voici un exemple de fichier Helm de PersistentVolumeClaim à mettre dans le projet que vous voulez déployer. Il faudra évidemment ensuite que vos fichiers déployant les différentes images utilisent ce PersistentVolumeClaim lors du déploiement.
+
 ```yaml 
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -19,7 +23,7 @@ spec:
       storage: 5Gi
   storageClassName: longhorn
 ```
-
+## Interface d'administration
 Pour accéder a l'interface d'administration en local sur le master il faut récupérer IP et port avec `kubectl get svc -n longhorn-system`. Il faut ensuite aller dans le navigateur et mettre http://IP:Port avec l'IP et le port du longhorn frontend.
 
 Il y a ensuite moyen d'attacher des volumes à des noeuds, de faire des backups, de gérer les volumes longhorn, etc...
