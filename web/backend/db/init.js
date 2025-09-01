@@ -15,10 +15,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'database.sqlite'), (err) =
                 username TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
-                reset_token TEXT,
-                reset_token_expiry INTEGER,
-                verification_token TEXT,
-                is_verified INTEGER DEFAULT 0,
+                is_verified INTEGER DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `, (err) => {
