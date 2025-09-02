@@ -34,3 +34,5 @@ http://<ip_serveur>:3000
 
 - L'application doit être déployée sur le serveur master en raison de contraintes techniques
 - Assurez-vous que le port 3000 est accessible sur le serveur. Par exemple, lancer le vpn à partir d'eduroam.
+- Réinitialisation de la base de données : supprimer web/backend/db/database.sqlite
+
