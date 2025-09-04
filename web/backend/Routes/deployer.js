@@ -429,7 +429,7 @@ router.post('/generated', async (req, res) => {
         res.status(500).json({ 
             error: 'Erreur lors du déploiement', 
             details: err.toString(),
-            message: 'Vérifiez que vous avez les permissions nécessaires pour accéder à Kubernetes, Helm, Docker et le registre privé'
+            message: err.toString()
         });
     } finally {
         // Nettoyage en cas d'erreur
