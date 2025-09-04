@@ -7,6 +7,7 @@ const path = require('path');
 const undeployRouter = require('./undeployer');
 const yaml = require('yaml');
 const { execCommand } = require('./k3sExec');
+const crypto = require('crypto');
 
 const REGISTRY_PORT = 5000;
 
@@ -368,7 +369,16 @@ router.post('/generated', async (req, res) => {
             console.error('Erreur lors de la récupération du hash du commit:', error);
             commitHash = Date.now().toString(36); // Fallback si erreur
         }
-        const imageName = `${repoName}-${commitHash}`;
+        let dockerfileHashSuffix = '';
+        if (dockerfileSource === 'custom' && typeof customDockerfile === 'string') {
+            try {
+                const fullHash = crypto.createHash('sha256').update(customDockerfile).digest('hex');
+                dockerfileHashSuffix = `-${fullHash.slice(0, 8)}`; // suffixe court
+            } catch (e) {
+                console.warn('Impossible de calculer le hash du Dockerfile personnalisé:', e.message);
+            }
+        }
+        const imageName = `${repoName}-${commitHash}${dockerfileHashSuffix}`;
 
         // Extraire les ports exposés du Dockerfile
         const exposedPorts = await extractExposedPorts(path.join(tempDir, 'Dockerfile'));
