@@ -46,6 +46,8 @@ Ajoutez un `Dockerfile` à la racine de votre projet :
 FROM node:20-slim
 WORKDIR /app
 COPY package*.json ./
+COPY emptyfiles.sh ./ 
+RUN chmod +x emptyfiles.sh
 RUN npm install
 COPY . .
 EXPOSE 3030
