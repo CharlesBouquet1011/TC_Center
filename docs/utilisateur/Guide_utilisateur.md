@@ -19,12 +19,14 @@ TC Center offre deux modes de déploiement :
 ## 2. Exemple d'application
 
 Pour illustrer le déploiement, nous utilisons une application exemple disponible sur [GitHub](https://github.com/sfrenot/wot).
+L'application nécessite une cléAPI d'accès aux outils de statistiques de Wot.
 
 **Test local de l'application :**
 ```bash
 git clone https://github.com/sfrenot/wot.git
 cd wot
 npm install
+echo "<KeyAPI - Wot" > ./key.wot
 node ./index.js
 ```
 
@@ -40,6 +42,7 @@ L'application affiche une analyse d'API publique d'un jeu en ligne et met enviro
 
 Pour le déploiement automatique, vous avez deux options :
 
+#### 1. Rechercher une
 #### 1. Dockerfile dans le projet
 Ajoutez un `Dockerfile` à la racine de votre projet :
 ```Dockerfile
@@ -47,6 +50,7 @@ FROM node:20-slim
 WORKDIR /app
 COPY package*.json ./
 COPY emptyfiles.sh ./ 
+RUN echo "<KeyAPI - Wot" > ./key.wot
 RUN chmod +x emptyfiles.sh
 RUN npm install
 COPY . .
@@ -129,7 +133,7 @@ Une fois connecté, vous accédez au tableau de bord de déploiement :
 - Collez le token généré à l'étape 4
 
 **Branche :**
-- Par défaut : `main` (ou `master` selon votre projet)
+- Par défaut : `main` (**ou `master` selon votre projet)**
 
 **Source du Dockerfile :**
 - **Dockerfile fourni dans le dépôt** : Utilise le Dockerfile du projet
@@ -144,6 +148,16 @@ Cliquez sur "Déployer" pour lancer le processus :
 3. **Génération automatique** du Helm Chart
 4. **Déploiement** sur le cluster Kubernetes
 5. **Création** du namespace utilisateur avec quotas
+
+Si le résultat fonctionne l'application indique une fenêtre similaire à cela. 
+
+![[RunningApp.png]]
+
+L'état "Running" indique que l'application a été bien déployée. Pour vérifier que l'application est accessible, il faut cliquer sur le lien indiqué dans la page "Télécharger Info IP".  Le champ 'services.port.url' indique le lien sur l'application.
+
+![[AppDescription.png]]
+
+Dans notre exemple d'application le lien final est : http://134.214.202.221:30503/crawl. La page finale s'affiche au bout de quelques secondes.
 
 ### Étape 4 — Résultat
 
