@@ -1,4 +1,8 @@
-# Configuration Réseau
+VLAN
+
+|   |   |   |   |   |
+|---|---|---|---|---|
+|10.50.149.0/25|INSA/LABO/INFRA_TP|128|1608|INSA/LABO/INFRA_TP|# Configuration Réseau
 
 # Réseau virtuel
 Le cluster k3s tourne avec un reverse proxy traefik.

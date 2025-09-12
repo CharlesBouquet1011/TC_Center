@@ -57,7 +57,7 @@ async function fetchFromGitLab(repoUrl, token, branch, isGenerated = false, hasC
 
         return tempDir;
     } catch (error) {
-        throw new Error(`Erreur lors de la récupération des fichiers: ${error.message}`);
+        throw new Error(`Erreur lors de la récupération des fichiers: ${error}`);
     }
 }
 
