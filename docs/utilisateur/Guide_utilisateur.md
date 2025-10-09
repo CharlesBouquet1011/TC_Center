@@ -26,7 +26,7 @@ L'application nécessite une cléAPI d'accès aux outils de statistiques de Wot.
 git clone https://github.com/sfrenot/wot.git
 cd wot
 npm install
-echo "<KeyAPI - Wot" > ./key.wot
+echo "<KeyAPI - Wot>" > ./key.wot
 node ./index.js
 ```
 
@@ -50,7 +50,7 @@ FROM node:20-slim
 WORKDIR /app
 COPY package*.json ./
 COPY emptyfiles.sh ./ 
-RUN echo "<KeyAPI - Wot" > ./key.wot
+RUN echo "<KeyAPI - Wot>" > ./key.wot
 RUN chmod +x emptyfiles.sh
 RUN npm install
 COPY . .
